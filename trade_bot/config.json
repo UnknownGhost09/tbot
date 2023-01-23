@@ -1,0 +1,31 @@
+{"Exchanges" :[
+
+
+    {
+        "exchange_name": "Binance",
+        "Symbol":"https://api.binance.com/api/v1/ticker/price",
+        "api":"https://api.binance.com"
+    },
+    {
+        "exchange_name": "Bitmex",
+        "Symbol": "https://www.bitmex.com/api/bitcoincharts/"
+     
+    },
+    {
+        "exchange_name": "GateIo",
+        "Symbol": "https://data.gateio.co/api2/1/marketlist"
+     
+    },
+    {
+        "exchange_name": "Kucoin",
+        "Symbol":"https://api.kucoin.com/api/v1/market/allTickers",
+        "api" : "https://api.kucoin.com"
+    }
+
+   
+   
+     
+]
+
+
+}
