@@ -1,0 +1,21 @@
+----------------APIs-----------------------------
+
+1.) Login ---> /login  Method ----> Post Headers ----> data ----> {'username':username,'password':password}
+2.) Logout---> /api/token/blacklist/ Method ----> Post Headers ----> Refresh Token --->{'refresh':'Token Here'}
+3.) Signup---> /signup Method ----> Post,Put,Patch, Headers ----> {'Authorisation':'Bearer Access Token here'}
+3a.) Post ---> data ---> All necessary fields 
+3b.) Put ----> data ---> Fully updation
+3c.) Patch ----> Partially updation
+
+--------------Exchanges APIs----------------------
+
+1.) bot -----> /user_exchanges/bot ----> This api will get Symbol,size and side . 
+2.) Binance ----> /user_exchanges/bin ------> Method ----> Get .... To getting the binance trade data Header----> {'Authorisation':'Bearer Access Token here'} data ----> {'id':id}
+3.) Bitmex ----> /user_exchanges/bit ------> Method ----> Get .... To getting the bitmex trade data Header----> {'Authorisation':'Bearer Access Token here'} data ----> {'id':id}
+4.) Gate.io ----> /user_exchanges/gate ------> Method ----> Get .... To getting the gate trade data Header----> {'Authorisation':'Bearer Access Token here'} data ----> {'id':id}
+5.) kucoin ----> /user_exchanges/kuk ------> Method ----> Get .... To getting the kuk trade data Header----> {'Authorisation':'Bearer Access Token here'} data ----> {'id':id}
+
+--------------Tokens APis -----------------------------------
+
+1.) Tokens ------> api/token/referesh/ Method ----> Post .....> for new Acess token
+
