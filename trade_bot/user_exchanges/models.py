@@ -1,9 +1,7 @@
 from django.db import models
 
-# Create your models here.
-
 class Binance_model(models.Model):
-    id=models.ForeignKey('core.User',on_delete=models.DO_NOTHING,db_column='id')
+    id=models.ForeignKey('core.User',on_delete=models.CASCADE,db_column='id')
     clientOrderId = models.CharField(max_length=200,primary_key=True)
     symbol=models.CharField(max_length=200,default='0')
     orderId=models.CharField(max_length=200,default='0')
@@ -20,8 +18,9 @@ class Binance_model(models.Model):
     class Meta:
         db_table = 'Binance_model'
 
+
 class Fills(models.Model):
-    clientOrderId = models.ForeignKey(Binance_model,on_delete=models.DO_NOTHING,db_column='clientOrderId')
+    clientOrderId = models.ForeignKey(Binance_model,on_delete=models.CASCADE,db_column='clientOrderId')
     commission = models.CharField(max_length=200)
     commissionAsset = models.CharField(max_length=200)
     price = models.CharField(max_length=200)
@@ -30,8 +29,9 @@ class Fills(models.Model):
 
     class Meta:
         db_table = 'Fills'
+
 class Exception(models.Model):
-    id = models.ForeignKey('core.user',on_delete=models.DO_NOTHING,db_column='id')
+    id = models.ForeignKey('core.user',on_delete=models.CASCADE,db_column='id')
     message = models.CharField(max_length=500)
     side = models.CharField(max_length=200)
     symbol = models.CharField(max_length=200)
@@ -44,8 +44,9 @@ class Exception(models.Model):
     class Meta:
         db_table='Exception'
 
+
 class Bitmex_model(models.Model):
-    id = models.ForeignKey('core.User',on_delete=models.DO_NOTHING,db_column='id')
+    id = models.ForeignKey('core.User',on_delete=models.CASCADE,db_column='id')
     orderID = models.CharField(max_length=200,primary_key=True)
     account = models.CharField(max_length=200)
     #clOrdId = models.CharField(max_length=200)
@@ -64,8 +65,9 @@ class Bitmex_model(models.Model):
     class Meta:
         db_table = 'Bitmex_model'
 
+
 class Kucoin_model(models.Model):
-    id = models.ForeignKey('core.User',on_delete=models.DO_NOTHING,db_column='id')
+    id = models.ForeignKey('core.User',on_delete=models.CASCADE,db_column='id')
     symbol= models.CharField(max_length=200)
     type = models.CharField(max_length=200)
     side = models.CharField(max_length=200)
@@ -78,8 +80,9 @@ class Kucoin_model(models.Model):
     class Meta:
         db_table = 'Kucoin_model'
 
+
 class Gate_model(models.Model):
-    id = models.ForeignKey('core.User', on_delete=models.DO_NOTHING, db_column='id')
+    id = models.ForeignKey('core.User', on_delete=models.CASCADE, db_column='id')
     symbol = models.CharField(max_length=200)
     currency_pair = models.CharField(max_length=200)
     account = models.CharField(max_length=200)
@@ -91,6 +94,50 @@ class Gate_model(models.Model):
     status=models.CharField(max_length=200,default=True)
     class Meta:
         db_table = 'Gate_model'
+
+class Exchanges(models.Model):
+    exchange_name=models.CharField(max_length=200,primary_key=True,db_column='exchange_name')
+    Symbol=models.CharField(max_length=300)
+    api=models.CharField(max_length=300)
+    socket = models.CharField(max_length=300,default='dsgdfgsd')
+    status = models.CharField(max_length=200,default='1')
+    api_key = models.CharField(max_length=300,default='api')
+    secret_key = models.CharField(max_length=300,default='secret')
+    passphrase = models.CharField(max_length=200,default='1')
+    class Meta:
+        db_table='Exchanges'
+
+class PairTable(models.Model):
+    pair=models.CharField(max_length=200)
+    coin=models.CharField(max_length=200)
+    class Meta:
+        db_table='Pair_Table'
+
+class BinanceKeys(models.Model):
+    id=models.ForeignKey('core.User', on_delete=models.CASCADE, db_column='id')
+    api_key=models.CharField(max_length=500)
+    secret_key=models.CharField(max_length=500,primary_key=True)
+    class Meta:
+        db_table='Binanace_keys'
+class BitmexKeys(models.Model):
+    id = models.ForeignKey('core.User', on_delete=models.CASCADE, db_column='id')
+    api_key=models.CharField(max_length=500)
+    secret_key=models.CharField(max_length=500,primary_key=True)
+    class meta:
+        db_table='Bitmex_keys'
+class KucoinKeys(models.Model):
+    id = models.ForeignKey('core.User', on_delete=models.CASCADE, db_column='id')
+    api_key = models.CharField(max_length=500)
+    secret_key = models.CharField(max_length=500,primary_key=True)
+    passphrase=models.CharField(max_length=200)
+    class Meta:
+        db_table='Kucoin_keys'
+class GateIoKeys(models.Model):
+    id = models.ForeignKey('core.User', on_delete=models.CASCADE, db_column='id')
+    api_key = models.CharField(max_length=500)
+    secret_key = models.CharField(max_length=500,primary_key=True)
+    class Meta:
+        db_table='Gate_keys'
 
 
 

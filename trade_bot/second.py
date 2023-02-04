@@ -113,6 +113,7 @@ class First:
         #return self.result
         self.result=[min(self.result),max(self.result)]
         return self.result
+
 obj=First('BTCUSDT')
 result=obj.coin()
 

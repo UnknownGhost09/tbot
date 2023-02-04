@@ -20,13 +20,15 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 from rest_framework_simplejwt.views import TokenBlacklistView
-
+from . import settings
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns,static
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('',include('core.urls')),
     path('user_exchanges/',include('user_exchanges.urls')),
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/token/blacklist/', TokenBlacklistView.as_view(), name='token_blacklist'),
-
+    path('user/',include('user_app.urls')),
+    path('subadmin/', include('subadmin_app.urls')),
+    path('adm/', include('admin_app.urls')),
 ]
+urlpatterns+=staticfiles_urlpatterns()
+urlpatterns+=static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)

@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 import datetime
 from pathlib import Path
-
+import os
 import pymysql
 pymysql.install_as_MySQLdb()
 
@@ -19,7 +19,7 @@ pymysql.install_as_MySQLdb()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
+KEY_ = "wdfsghdhgyg---jhhbbvvbnj----xcvbbyhhgbbnuyh"
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
@@ -29,9 +29,14 @@ SECRET_KEY = 'django-insecure-(*g2a=fi6p(%n5_hrq)im8hn^##msr_43w59*)#6n$rs31g!a_
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
+CORS_ORIGIN_ALLOW_ALL = True
 
+'''CORS_ORIGIN_WHITELIST = (
+  'http://localhost:8000',
+)'''
 
+KEY_ = 'DSFGREWDF-jndjndnnd-noONBVtgvbb'
 # Application definition
 
 INSTALLED_APPS = [
@@ -45,7 +50,10 @@ INSTALLED_APPS = [
     'rest_framework',
     'user_exchanges',
     'rest_framework_simplejwt',
-    'rest_framework_simplejwt.token_blacklist',
+    'corsheaders',
+    'admin_app',
+    'subadmin_app',
+    'user_app',
 ]
 
 
@@ -58,6 +66,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'trade_bot.urls'
@@ -139,14 +148,35 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+'''
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+    '/var/www/static/',
+]
+'''
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'core.User'
-JWT_AUTH={
 
-    'REFRESH_TOKEN_LIFETIME':datetime.timedelta(days=1),
-    'JWT_ALLOW_REFRESH':True
+'''JWT_AUTH = {
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=60),  # Token expires * minutes after being issued
+     'JWT_ALLOW_REFRESH': True,
+     'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(seconds=30),  # Token can be refreshed up to * minutes after being issued
+ }
+'''
 
-}
+
+EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST='smtp.gmail.com'
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER='anuradhadevi123445@gmail.com'
+EMAIL_HOST_PASSWORD='pgltclpdrckgjwkh'
+
+
+
+MEDIA_URL='/media/'
+MEDIA_ROOT=os.path.join(BASE_DIR,'media')
