@@ -2,7 +2,7 @@ from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
-from .models import Exchanges,PairTable,BinanceKeys,BitmexKeys,GateIoKeys,KucoinKeys
+from .models import Exchanges,PairTable,BinanceKeys1,BitmexKeys1,GateIoKeys1,KucoinKeys1,Binance_model,Bitmex_model,Gate_model,Kucoin_model,Exception
 from .serializer import BinanceSerial,BitmexSerial,GateSerial,\
     KucoinSerial,ExceptionSerial,Fillserial,ExchangesSeial,PairSerial,\
     BinanceKeysSerial,BitmexKeysSerial,GatekeySerial,KucoinKeysSerial
@@ -10,39 +10,100 @@ from scheduler_ import Stb
 import jwt
 from django.conf import settings
 from rest_framework import status
+import json
 KEYS = getattr(settings, "KEY_", None)
 
 class Binance_api(APIView):
     def get(self,request,format=None):
         data_ = request.data
-        return Response({'status':True})
+        token = request.META.get('HTTP_AUTHORIZATION')
+        User = get_user_model()
+        try:
+            d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
+        except:
+            return Response({'status': False, 'message': 'Token Expired'}, status=status.HTTP_400_BAD_REQUEST)
+        uname = d.get('username')
+        role = User.objects.get(username=uname).role
+        if str(role) == '1':
+            if data_.get('id') is not None:
+                try:
+                    bin=Binance_model.objects.get(username=data_.get('id'))
+                except:
+                    return Response({'status':False,'message':'data does not exists'},status=status.HTTP_404_NOT_FOUND)
+                binserial=BinanceSerial(bin)
+                return Response({'status':True,'data':binserial.data},status=status.HTTP_200_OK)
+            else:
+                bin=Binance_model.objects.all()
+                binserial=BinanceSerial(bin,many=True)
+                return Response({'status':True,'data':binserial.data},status=status.HTTP_200_OK)
+        else:
+            id=User.objects.get(username=uname).id
+            try:
+                bin = Binance_model.objects.get(username=id)
+            except:
+                return Response({'status': False, 'message': 'data not exists'}, status=status.HTTP_404_NOT_FOUND)
+            binserial = BinanceSerial(bin)
+            return Response({'status': True, 'data': binserial.data}, status=status.HTTP_200_OK)
+
+
+
     def post(self,request,format=None):
         data_ = request.data
         token=request.META.get('HTTP_AUTHORIZATION')
-        try:
-            d=jwt.decode(token,key=settings.KEYS,algorithms=['HS256'])
-            if data_.get('status')=='True':
-                obj = BinanceSerial(data=data_)
-                if obj.is_valid():
-                    obj.save()
-                    return Response({'status':True,'message':'Binance data saved successfully'})
-                else:
-                    return Response({'status':False,'message':obj.errors})
-            else:
-                data_ = request.data
-                obj = ExceptionSerial(data=data_)
-                if obj.is_valid():
-                    obj.save()
-                    return Response({'status':False,'message':'ApiException saved','exchange_name':'Binance'})
-                else:
-                    return Response({'status':False,'message':obj.errors,'exchange_name':'Binance'})
-        except:
-            return Response({'status':False,'message':'Token Expired'})
 
+        try:
+            d=jwt.decode(token,key=KEYS,algorithms=['HS256'])
+        except:
+            return Response({'status':False,'message':'Token Expired'},status=status.HTTP_400_BAD_REQUEST)
+
+
+        if data_.get('status')=='True':
+            obj = BinanceSerial(data=data_)
+            if obj.is_valid():
+                obj.save()
+                return Response({'status':True,'message':'Binance data saved successfully'},status=status.HTTP_200_OK)
+            else:
+                return Response({'status':False,'message':obj.errors},status=status.HTTP_400_BAD_REQUEST)
+        else:
+            data_ = request.data
+            obj = ExceptionSerial(data=data_)
+            if obj.is_valid():
+                obj.save()
+                return Response({'status':False,'message':'ApiException saved','exchange_name':'Binance'},status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({'status':False,'message':obj.errors,'exchange_name':'Binance'},status=status.HTTP_400_BAD_REQUEST)
 class Bitmex_api(APIView):
     def get(self,request,format=None):
         data_ = request.data
-        return Response({'status':True})
+        token = request.META.get('HTTP_AUTHORIZATION')
+        User = get_user_model()
+        try:
+            d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
+        except:
+            return Response({'status': False, 'message': 'Token Expired'}, status=status.HTTP_400_BAD_REQUEST)
+        uname = d.get('username')
+        role = User.objects.get(username=uname).role
+        if str(role) == '1':
+            if data_.get('id') is not None:
+                try:
+                    bit = Bitmex_model.objects.get(username=data_.get('id'))
+                except:
+                    return Response({'status': False, 'message': 'data does not exists'},
+                                    status=status.HTTP_404_NOT_FOUND)
+                bitserial = BitmexSerial(bit)
+                return Response({'status': True, 'data': bitserial.data}, status=status.HTTP_200_OK)
+            else:
+                bit = Bitmex_model.objects.all()
+                bitserial = BitmexSerial(bit, many=True)
+                return Response({'status': True, 'data': bitserial.data}, status=status.HTTP_200_OK)
+        else:
+            id = User.objects.get(username=uname).id
+            try:
+                bin = Bitmex_model.objects.get(username=id)
+            except:
+                return Response({'status': False, 'message': 'data not exists'}, status=status.HTTP_404_NOT_FOUND)
+            binserial = BitmexSerial(bin)
+            return Response({'status': True, 'data': binserial.data}, status=status.HTTP_200_OK)
     def post(self,request,format=None):
         token = request.META.get('HTTP_AUTHORIZATION')
         data_ = request.data
@@ -50,28 +111,56 @@ class Bitmex_api(APIView):
             d=jwt.decode(token,key=KEYS,algorithms=['HS256'])
 
         except:
-            return Response({'status': False, 'message': 'Token Expired'})
-        status = data_.get('status')
-        if status=='True':
+            return Response({'status': False, 'message': 'Token Expired'},status=status.HTTP_401_UNAUTHORIZED)
+        status_ = data_.get('status')
+        if status_=='True':
             obj = BitmexSerial(data=data_)
             if obj.is_valid():
                 obj.save()
-                return Response({'status':True,'message':'Bitmex Data Saved Successfully'})
+                return Response({'status':True,'message':'Bitmex Data Saved Successfully'},status=status.HTTP_200_OK)
             else:
-                return Response({'status':False,'message':obj.errors})
+                return Response({'status':False,'message':obj.errors},status=status.HTTP_400_BAD_REQUEST)
         else:
             data_ = request.data
             obj = ExceptionSerial(data=data_)
             if obj.is_valid():
                 obj.save()
-                return Response({'status':False,'message':'ApiException saved','exchange_name':'Bitmex'})
+                return Response({'status':False,'message':'ApiException saved','exchange_name':'Bitmex'},status=status.HTTP_400_BAD_REQUEST)
             else:
-                return Response({'status':False,'message':obj.errors,'exchange_name':'Bitmex'})
+                return Response({'status':False,'message':obj.errors,'exchange_name':'Bitmex'},status=status.HTTP_400_BAD_REQUEST)
 
 class Kucoin_api(APIView):
     def get(self,request,format=None):
         data_ = request.data
-        return Response({'status':True})
+        token = request.META.get('HTTP_AUTHORIZATION')
+        User = get_user_model()
+        try:
+            d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
+        except:
+            return Response({'status': False, 'message': 'Token Expired'}, status=status.HTTP_400_BAD_REQUEST)
+        uname = d.get('username')
+        role = User.objects.get(username=uname).role
+        if str(role) == '1':
+            if data_.get('id') is not None:
+                try:
+                    bin = Kucoin_model.objects.get(username=data_.get('id'))
+                except:
+                    return Response({'status': False, 'message': 'data does not exists'},
+                                    status=status.HTTP_404_NOT_FOUND)
+                binserial = KucoinSerial(bin)
+                return Response({'status': True, 'data': binserial.data}, status=status.HTTP_200_OK)
+            else:
+                bin = Kucoin_model.objects.all()
+                binserial = KucoinSerial(bin, many=True)
+                return Response({'status': True, 'data': binserial.data}, status=status.HTTP_200_OK)
+        else:
+            id = User.objects.get(username=uname).id
+            try:
+                bin = Kucoin_model.objects.get(username=id)
+            except:
+                return Response({'status': False, 'message': 'data not exists'}, status=status.HTTP_404_NOT_FOUND)
+            binserial = KucoinSerial(bin)
+            return Response({'status': True, 'data': binserial.data}, status=status.HTTP_200_OK)
 
     def post(self,request,format=True):
         data_ = request.data
@@ -79,55 +168,83 @@ class Kucoin_api(APIView):
         try:
             d=jwt.decode(token,key=KEYS,algorithms=['HS256'])
         except:
-            return Response({'status': False, 'message': 'Token Expired'})
-        status = data_.get('status')
-        if status=='True':
+            return Response({'status': False, 'message': 'Token Expired'},status=status.HTTP_401_UNAUTHORIZED)
+        status_ = data_.get('status')
+        if status_=='True':
             obj = KucoinSerial(data=data_)
             if obj.is_valid():
                 obj.save()
                 return Response({'status':True,'message':'Kucoin Data Saved Successfully'
-                                 ,'exchange_name':'Kucoin'})
+                                 ,'exchange_name':'Kucoin'},status=status.HTTP_200_OK)
             else:
-                return Response({'status':False,'message':obj.errors ,'exchange_name':'Kucoin'})
+                return Response({'status':False,'message':obj.errors ,'exchange_name':'Kucoin'},status=status.HTTP_400_BAD_REQUEST)
         else:
             data_ = request.data
             obj = ExceptionSerial(data=data_)
 
             if obj.is_valid():
                 obj.save()
-                return Response({'status':False,'message':'ApiException saved','exchange_name':'Kucoin'})
+                return Response({'status':False,'message':'ApiException saved','exchange_name':'Kucoin'},status=status.HTTP_400_BAD_REQUEST)
             else:
-                return Response({'status':False,'message':obj.errors ,'exchange_name':'Kucoin'})
+                return Response({'status':False,'message':obj.errors ,'exchange_name':'Kucoin'},status=status.HTTP_400_BAD_REQUEST)
 
 class Gate_api(APIView):
     def get(self,request,format=None):
         data_ = request.data
-        return Response({'status':True})
+        token = request.META.get('HTTP_AUTHORIZATION')
+        User = get_user_model()
+        try:
+            d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
+        except:
+            return Response({'status': False, 'message': 'Token Expired'}, status=status.HTTP_400_BAD_REQUEST)
+        uname = d.get('username')
+        role = User.objects.get(username=uname).role
+        if str(role) == '1':
+            if data_.get('id') is not None:
+                try:
+                    bin = Gate_model.objects.get(username=data_.get('id'))
+                except:
+                    return Response({'status': False, 'message': 'data does not exists'},
+                                    status=status.HTTP_404_NOT_FOUND)
+                binserial = GateSerial(bin)
+                return Response({'status': True, 'data': binserial.data}, status=status.HTTP_200_OK)
+            else:
+                bin = Gate_model.objects.all()
+                binserial = GateSerial(bin, many=True)
+                return Response({'status': True, 'data': binserial.data}, status=status.HTTP_200_OK)
+        else:
+            id = User.objects.get(username=uname).id
+            try:
+                bin = Gate_model.objects.get(username=id)
+            except:
+                return Response({'status': False, 'message': 'data not exists'}, status=status.HTTP_404_NOT_FOUND)
+            binserial = GateSerial(bin)
+            return Response({'status': True, 'data': binserial.data}, status=status.HTTP_200_OK)
     def post(self,request,format=None):
         token = request.META.get('HTTP_AUTHORIZATION')
         data_ = request.data
         try:
             d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
         except:
-            return Response({'status': False, 'message': 'token Expired'})
+            return Response({'status': False, 'message': 'token Expired'},status=status.HTTP_401_UNAUTHORIZED)
 
-        status = data_.get('status')
-        if status=='True':
+        status_ = data_.get('status')
+        if status_=='True':
             obj = GateSerial(data=data_)
             if obj.is_valid():
                 obj.save()
                 return Response({'status':True,'message':'Gate.io Data Saved Successfully',
-                                 'exchange_name':'Gate.io'})
+                                 'exchange_name':'Gate.io'},status=status.HTTP_200_OK)
             else:
-                return Response({'status':False,'message':obj.errors,'exchange_name':'Gate.io'})
+                return Response({'status':False,'message':obj.errors,'exchange_name':'Gate.io'},status=status.HTTP_400_BAD_REQUEST)
         else:
             data_ = request.data
             obj = ExceptionSerial(data=data_)
             if obj.is_valid():
                 obj.save()
-                return Response({'status':False,'message':'ApiException saved','exchange_name':'Gate.io'})
+                return Response({'status':False,'message':'ApiException saved','exchange_name':'Gate.io'},status=status.HTTP_400_BAD_REQUEST)
             else:
-                return Response({'status':False,'message':obj.errors,'exchange_name':'Gate.io'})
+                return Response({'status':False,'message':obj.errors,'exchange_name':'Gate.io'},status=status.HTTP_400_BAD_REQUEST)
 
 class Fills_api(APIView):
     def post(self,request,format=None):
@@ -136,14 +253,14 @@ class Fills_api(APIView):
         try:
             d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
         except:
-            return Response({'status': False, 'message': 'Token Expired'})
+            return Response({'status': False, 'message': 'Token Expired'},status=status.HTTP_400_BAD_REQUEST)
 
         obj=Fillserial(data=data_)
         if obj.is_valid():
             obj.save()
-            return Response({'status':True,'message':'Fills Data saved successfull','exchange_name':'Binance'})
+            return Response({'status':True,'message':'Fills Data saved successfull','exchange_name':'Binance'},status=status.HTTP_200_OK)
         else:
-            return Response({'status':False,'message':obj.errors,'exchange_name':'Binance'})
+            return Response({'status':False,'message':obj.errors,'exchange_name':'Binance'},status=status.HTTP_400_BAD_REQUEST)
 
 class Bot_api(APIView):
     def post(self,request,format=None):
@@ -153,7 +270,10 @@ class Bot_api(APIView):
         try:
             data=jwt.decode(token,key=KEYS,algorithms=['HS256'])
         except:
-            return Response({'status': False, 'message': 'Token Expired'})
+
+            return Response({'status': False, 'message': 'Token Expired'},status=status.HTTP_401_UNAUTHORIZED)
+        uname = data.get('username')
+        id = User.objects.get(username=uname).id
         exc=Exchanges.objects.filter(status=1)
         exc=ExchangesSeial(exc,many=True)
         exchanges={"Exchanges":[]}
@@ -162,17 +282,22 @@ class Bot_api(APIView):
             exchanges["Exchanges"].append({"exchange_name":i.get('exchange_name'),"Symbol":i.get('Symbol'),
                                            "api":i.get('api'),"socket":i.get('socket')})
             lst.append(i.get('exchange_name'))
+        exchanges = json.dumps(exchanges)
         with open(r'config.json','w') as fl:
             fl.write(exchanges)
 
         if 'Binance' in lst:
             try:
-                binkeys = BinanceKeys.objects.get(id=id)
+                binkeys = BinanceKeys1.objects.get(id=id)
                 binapi_key = binkeys.api_key
                 binsecret_key = binkeys.secret_key
+
+            except:
+                return Response({'status': False, 'message': 'Binance keys  are not there'},status=status.HTTP_404_NOT_FOUND)
+            try:
                 bin_socket = Exchanges.objects.get(exchange_name='Binance').socket
             except:
-                return Response({'status': False, 'message': 'Binance keys are not there or socket are not there'})
+                return Response({'status':False,'message':'Binance sockets are not there'},status=status.HTTP_404_NOT_FOUND)
         else:
             binapi_key = None
             binsecret_key = None
@@ -180,24 +305,32 @@ class Bot_api(APIView):
 
         if 'Bitmex' in lst:
             try:
-                bitkeys = BitmexKeys.objects.get(id=id)
+                bitkeys = BitmexKeys1.objects.get(id=id)
                 bitapi_key = bitkeys.api_key
                 bitsecret_key = bitkeys.secret_key
+
+            except:
+                return Response({'status': False, 'message': 'Bitmex keys are not there'},status=status.HTTP_404_NOT_FOUND)
+            try:
                 bit_socket = Exchanges.objects.get(exchange_name='Bitmex').socket
             except:
-                return Response({'status': False, 'message': 'Bitmex keys are not there or socket are not there'})
+                return Response({'status':False,'message':'Bitmex Socket are not there'},status=status.HTTP_404_NOT_FOUND)
         else:
             bitapi_key = None
             bitsecret_key = None
             bit_socket = None
         if 'GateIo' in lst:
             try:
-                gatekeys = GateIoKeys.objects.get(id=id)
+                gatekeys = GateIoKeys1.objects.get(id=id)
                 gateapi_key = gatekeys.api_key
                 gatesecret_key = gatekeys.secret_key
+
+            except:
+                return Response({'status': False, 'message': 'GateIo keys are not there'},status=status.HTTP_404_NOT_FOUND)
+            try:
                 gate_socket = Exchanges.objects.get(exchange_name='GateIo').socket
             except:
-                return Response({'status': False, 'message': 'GateIo keys are not there or socket are not there'})
+                return Response({'status':False,'message':'GateIo socket are not there'},status=status.HTTP_404_NOT_FOUND)
         else:
             gateapi_key = True
             gatesecret_key = True
@@ -205,13 +338,17 @@ class Bot_api(APIView):
 
         if 'Kucoin' in lst:
             try:
-                kuckeys = KucoinKeys.objects.get(id=id)
+                kuckeys = KucoinKeys1.objects.get(id=id)
                 kucapi_key = kuckeys.api_key
                 kucsecret_key = kuckeys.secret_key
                 kucpassphrase = kuckeys.passphrase
+
+            except:
+                return Response({'status': False, 'message': 'Kucoin keys are not there '},status=status.HTTP_404_NOT_FOUND)
+            try:
                 kuk_socket = Exchanges.objects.get(exchange_name='Kucoin').socket
             except:
-                return Response({'status': False, 'message': 'Kucoin keys are not there or socket are not there'})
+                return Response({'status':False,'message':'Kucoin socket are not there'},status=status.HTTP_404_NOT_FOUND)
         else:
             kucapi_key = None
             kucsecret_key = None
@@ -225,7 +362,7 @@ class Bot_api(APIView):
         Stb(symbol, amount, token, id, binapi_key, binsecret_key, bitapi_key, bitsecret_key, gateapi_key,
             gatesecret_key, kucapi_key, kucsecret_key, kucpassphrase, bin_socket, bit_socket, gate_socket,
             kuk_socket)
-        return Response({'status': True, 'message': 'Bot execution competed'})
+        return Response({'status': True, 'message': 'Bot execution competed'},status=status.HTTP_200_OK)
 
 class ConfigApi(APIView):
     def get(self,request,format=None):
@@ -233,7 +370,7 @@ class ConfigApi(APIView):
         try:
             d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
         except:
-            return Response({'status':False,'message':'Token Expired'})
+            return Response({'status':False,'message':'Token Expired'},status=status.HTTP_401_UNAUTHORIZED)
         User = get_user_model()
         email = d.get('email')
         role = User.objects.get(email=email).role
@@ -241,9 +378,9 @@ class ConfigApi(APIView):
             obj=Exchanges.objects.all()
             serial=ExchangesSeial(obj,many=True)
             del obj
-            return Response({'status':True,'data':serial.data})
+            return Response({'status':True,'data':serial.data},status=status.HTTP_200_OK)
         else:
-            return Response({'status':False,'message':"You are not an admin"})
+            return Response({'status':False,'message':"You are not an admin"},status=status.HTTP_401_UNAUTHORIZED)
 
     def post(self, request, format=None):
         data_=request.data
@@ -268,23 +405,28 @@ class ConfigApi(APIView):
                 if usr.status=='0':
                     usr.status='1'
                     usr.save()
-                    return Response({'status':True,'message':'Exchange Disable successfully'},status=status.HTTP_200_OK)
+                    return Response({'status':True,'message':'Exchange Enable successfully'},status=status.HTTP_200_OK)
                 else:
                     usr.status = '0'
                     usr.save()
-                    return Response({'status': True, 'message': 'Exchange Enable successfully'},status=status.HTTP_200_OK)
+                    return Response({'status': True, 'message': 'Exchange Disable successfully'},status=status.HTTP_200_OK)
             else:
                 return Response({'status':False,'message':'No exchange provided'},status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({'status':False,'message':'Only admins are allowed'},status=status.HTTP_401_UNAUTHORIZED)
+
+
+
 class Set_Exchanges(APIView):
+
+
     def post(self,request,format=None):
         data_=request.data
         token = request.META.get('HTTP_AUTHORIZATION')
         try:
             d=jwt.decode(token,key=KEYS,algorithms=['HS256'])
         except:
-            return Response({'status':False,'message':'Token Expired'})
+            return Response({'status':False,'message':'Token Expired'},status=status.HTTP_401_UNAUTHORIZED)
         User=get_user_model()
         email = d.get('email')
         role = User.objects.get(email=email).role
@@ -292,11 +434,11 @@ class Set_Exchanges(APIView):
             serial=ExchangesSeial(data=data_)
             if serial.is_valid():
                 serial.save()
-                return Response({'status':True,'message':'Exchange data saved successfully'})
+                return Response({'status':True,'message':'Exchange data saved successfully'},status=status.HTTP_200_OK)
             else:
-                return Response({'status':False,'message':serial.error})
+                return Response({'status':False,'message':serial.errors},status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response({"status":False,'message':'You are not an admin'})
+            return Response({"status":False,'message':'You are not an admin'},status=status.HTTP_401_UNAUTHORIZED)
 
 class PairApi(APIView):
     def get(self,request,format=None):
@@ -306,11 +448,11 @@ class PairApi(APIView):
         try:
             d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
         except:
-            return Response({'status':False,'message':'Token Expired'})
+            return Response({'status':False,'message':'Token Expired'},status=status.HTTP_401_UNAUTHORIZED)
 
         obj=PairTable.objects.filter(pair=data_.get('pair'))
         serial=PairSerial(obj,many=True)
-        return Response({'status':True,'message':serial.data})
+        return Response({'status':True,'message':serial.data},status=status.HTTP_200_OK)
     def post(self,request,format=None):
         token = request.META.get('HTTP_AUTHORIZATION')
         data_=request.data
@@ -318,7 +460,7 @@ class PairApi(APIView):
         try:
             d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
         except:
-            return Response({'status':False,'message':'Token Expired'})
+            return Response({'status':False,'message':'Token Expired'},status=status.HTTP_401_UNAUTHORIZED)
         print(d)
         User = get_user_model()
         email = d.get('email')
@@ -329,11 +471,11 @@ class PairApi(APIView):
             serial=PairSerial(data=data_)
             if serial.is_valid():
                 serial.save()
-                return Response({'status':True,'message':'Pair saved successfully'})
+                return Response({'status':True,'message':'Pair saved successfully'},status=status.HTTP_200_OK)
             else:
-                return Response({'status':False,'message':serial.errors})
+                return Response({'status':False,'message':serial.errors},status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response({'status':False,'message':'You are not an admin'})
+            return Response({'status':False,'message':'You are not an admin'},status=status.HTTP_401_UNAUTHORIZED)
 
 class SetBinanceKeys(APIView):
     def get(self,request,format=None):
@@ -342,23 +484,24 @@ class SetBinanceKeys(APIView):
         try:
             d=jwt.decode(token,key=KEYS,algorithms=['HS256'])
         except:
-            return Response({'status':False,'message':'Token Expired'})
+            return Response({'status':False,'message':'Token Expired'},status=status.HTTP_401_UNAUTHORIZED)
         uname = d.get('username')
         User = get_user_model()
         role = User.objects.get(username=uname).role
-        if str(role) == ' 1':
-            obj = BinanceKeys.objects.all()
-            serial = BinanceKeysSerial(obj,many=True)
-            return Response({'status':True,'message':serial.data})
+        if str(role) == '1':
+            id_= User.objects.get(username=uname).id
+            obj = BinanceKeys1.objects.get(id=id_)
+            serial = BinanceKeysSerial(obj)
+            return Response({'status':True,'message':serial.data},status=status.HTTP_200_OK)
         else:
-            return Response({'status':False,'message':'You are not an admin'})
+            return Response({'status':False,'message':'You are not an admin'},status=status.HTTP_401_UNAUTHORIZED)
     def post(self,request,format=None):
         data_=request.data
         token = request.META.get('HTTP_AUTHORIZATION')
         try:
             d=jwt.decode(token,key=KEYS,algorithms=['HS256'])
         except:
-            return Response({'status':False,'message':'Token Expired'})
+            return Response({'status':False,'message':'Token Expired'},status=status.HTTP_401_UNAUTHORIZED)
         User=get_user_model()
         uname=d.get('username')
         id=User.objects.get(username=uname).id
@@ -366,9 +509,35 @@ class SetBinanceKeys(APIView):
         serial=BinanceKeysSerial(data=data_)
         if serial.is_valid():
             serial.save()
-            return Response({'status':True,'message':'Binance Keys Saved successfully'})
+            return Response({'status':True,'message':'Binance Keys Saved successfully'},status=status.HTTP_200_OK)
         else:
-            return Response({'status':False,'message':serial.errors})
+            return Response({'status':False,'message':serial.errors},status=status.HTTP_401_UNAUTHORIZED)
+
+    def patch(self,request,format=None):
+        data_=request.data
+        token = request.META.get('HTTP_AUTHORIZATION')
+        try:
+            d=jwt.decode(token,key=KEYS,algorithms=['HS256'])
+        except:
+            return Response({'status':False,'message':'Token Expired'},status=status.HTTP_401_UNAUTHORIZED)
+        uname = d.get('username')
+        User = get_user_model()
+        role = User.objects.get(username=uname).role
+        if str(role) == '1':
+            id_=User.objects.get(username=uname).id
+            #id_ = data_.get('id')
+            print(id_)
+            obj=BinanceKeys1.objects.get(id=id_)
+            if data_.get('api_key') is not None:
+                obj.api_key=data_.get('api_key')
+            if data_.get('secret_key') is not None:
+                obj.secret_key=data_.get('secret_key')
+            obj.save()
+            return Response({'status':True,'message':'data updated successfully'},status=status.HTTP_200_OK)
+        else:
+            return Response({'status':False,'message':'You are not an admin'},status=status.HTTP_401_UNAUTHORIZED)
+
+
 
 class SetBitmexKeys(APIView):
     def get(self,request,format=None):
@@ -377,16 +546,17 @@ class SetBitmexKeys(APIView):
         try:
             d=jwt.decode(token,key=KEYS,algorithms=['HS256'])
         except:
-            return Response({'status':False,'message':'Token Expired'})
+            return Response({'status':False,'message':'Token Expired'},status=status.HTTP_401_UNAUTHORIZED)
         uname = d.get('username')
         User = get_user_model()
         role = User.objects.get(username=uname).role
         if str(role) == '1':
-            obj = BinanceKeys.objects.all()
-            serial = BinanceKeysSerial(obj,many=True)
-            return Response({'status':True,'message':serial.data})
+            id_ = User.objects.get(username=uname).id
+            obj = BitmexKeys1.objects.get(id=id_)
+            serial = BitmexKeysSerial(obj)
+            return Response({'status':True,'message':serial.data},status=status.HTTP_200_OK)
         else:
-            return Response({'status':False,'message':'You are not an admin'})
+            return Response({'status':False,'message':'You are not an admin'},status=status.HTTP_401_UNAUTHORIZED)
 
     def post(self, request, format=None):
         data_ = request.data
@@ -395,7 +565,7 @@ class SetBitmexKeys(APIView):
             d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
 
         except:
-            return Response({'status':False,'message':'Token Expired'})
+            return Response({'status':False,'message':'Token Expired'},status=status.HTTP_401_UNAUTHORIZED)
         User = get_user_model()
         uname = d.get('username')
         id = User.objects.get(username=uname).id
@@ -403,9 +573,31 @@ class SetBitmexKeys(APIView):
         serial = BitmexKeysSerial(data=data_)
         if serial.is_valid():
             serial.save()
-            return Response({'status': True, 'message': 'Bitmex Keys Saved successfully'})
+            return Response({'status': True, 'message': 'Bitmex Keys Saved successfully'},status=status.HTTP_200_OK)
         else:
-            return Response({'status': False, 'message': serial.errors})
+            return Response({'status': False, 'message': serial.errors},status=status.HTTP_401_UNAUTHORIZED)
+
+    def patch(self,request,format=None):
+        data_=request.data
+        token = request.META.get('HTTP_AUTHORIZATION')
+        try:
+            d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
+        except:
+            return Response({'status': False, 'message': 'Token Expired'}, status=status.HTTP_401_UNAUTHORIZED)
+        uname = d.get('username')
+        User = get_user_model()
+        role = User.objects.get(username=uname).role
+        if str(role) == '1':
+            id_=User.objects.get(username=uname).id
+            obj=BitmexKeys1.objects.get(id=id_)
+            obj=BitmexKeysSerial(obj,data=data_,partial=True)
+            if obj.is_valid():
+                obj.save()
+                return Response({'status':True,'message':'Bitmex keys updated successfully'},status=status.HTTP_200_OK)
+            else:
+                return Response({'status':False,'message':obj.errors},status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({'status':False,'message':'You are not an Admin'},status=status.HTTP_401_UNAUTHORIZED)
 
 class SetGateKeys(APIView):
 
@@ -415,16 +607,17 @@ class SetGateKeys(APIView):
         try:
             d=jwt.decode(token,key=KEYS,algorithms=['HS256'])
         except:
-            return Response({'status':False,'message':'Token Expired'})
+            return Response({'status':False,'message':'Token Expired'},status=status.HTTP_401_UNAUTHORIZED)
         uname = d.get('username')
         User = get_user_model()
         role = User.objects.get(username=uname).role
         if str(role) == '1':
-            obj = BinanceKeys.objects.all()
-            serial = BinanceKeysSerial(obj,many=True)
-            return Response({'status':True,'message':serial.data})
+            id_=User.objects.get(username=uname).id
+            obj = GateIoKeys1.objects.get(id=id_)
+            serial = GatekeySerial(obj)
+            return Response({'status':True,'message':serial.data},status=status.HTTP_200_OK)
         else:
-            return Response({'status':False,'message':'You are not an admin'})
+            return Response({'status':False,'message':'You are not an admin'},status=status.HTTP_401_UNAUTHORIZED)
 
     def post(self, request, format=None):
         data_ = request.data
@@ -432,7 +625,7 @@ class SetGateKeys(APIView):
         try:
             d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
         except:
-            return Response({'status':False,'message':'Token Expired'})
+            return Response({'status':False,'message':'Token Expired'},status=status.HTTP_401_UNAUTHORIZED)
         User = get_user_model()
         uname = d.get('username')
         id = User.objects.get(username=uname).id
@@ -440,9 +633,31 @@ class SetGateKeys(APIView):
         serial = GatekeySerial(data=data_)
         if serial.is_valid():
             serial.save()
-            return Response({'status': True, 'message': 'GateIo Keys Saved successfully'})
+            return Response({'status': True, 'message': 'GateIo Keys Saved successfully'},status=status.HTTP_200_OK)
         else:
-            return Response({'status': False, 'message': serial.errors})
+            return Response({'status': False, 'message': serial.errors},status=status.HTTP_401_UNAUTHORIZED)
+
+    def patch(self,request,format=None):
+        data_=request.data
+        token = request.META.get('HTTP_AUTHORIZATION')
+        try:
+            d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
+        except:
+            return Response({'status': False, 'message': 'Token Expired'}, status=status.HTTP_401_UNAUTHORIZED)
+        uname = d.get('username')
+        User = get_user_model()
+        role = User.objects.get(username=uname).role
+        if str(role) == '1':
+            id_=User.objects.get(username=uname).id
+            obj=GateIoKeys1.objects.get(id=id_)
+            obj=GatekeySerial(obj,data=data_,partial=True)
+            if obj.is_valid():
+                obj.save()
+                return Response({'status':True,'message':'Gate keys updated successfully'},status=status.HTTP_200_OK)
+            else:
+                return Response({'status':False,'message':obj.errors},status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({'status':False,'message':'You are not an Admin'},status=status.HTTP_401_UNAUTHORIZED)
 
 class SetKucoinKeys(APIView):
 
@@ -452,16 +667,18 @@ class SetKucoinKeys(APIView):
         try:
             d=jwt.decode(token,key=KEYS,algorithms=['HS256'])
         except:
-            return Response({'status':False,'message':'Token Expired'})
+            return Response({'status':False,'message':'Token Expired'},status=status.HTTP_401_UNAUTHORIZED)
         uname = d.get('username')
         User = get_user_model()
         role = User.objects.get(username=uname).role
         if str(role) == '1':
-            obj = BinanceKeys.objects.all()
-            serial = BinanceKeysSerial(obj,many=True)
-            return Response({'status':True,'message':serial.data})
+            id_ = User.objects.get(username=uname)
+            obj = KucoinKeys1.objects.get(id=id_)
+            serial = KucoinKeysSerial(obj)
+            return Response({'status':True,'message':serial.data},status=status.HTTP_200_OK)
         else:
-            return Response({'status':False,'message':'You are not an admin'})
+            return Response({'status':False,'message':'You are not an admin'},status=status.HTTP_401_UNAUTHORIZED)
+
 
     def post(self, request, format=None):
         data_ = request.data
@@ -469,7 +686,7 @@ class SetKucoinKeys(APIView):
         try:
             d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
         except:
-            return Response({'status':False,'message':'Token Expired'})
+            return Response({'status':False,'message':'Token Expired'},status=status.HTTP_401_UNAUTHORIZED)
         User = get_user_model()
         uname = d.get('username')
         id = User.objects.get(username=uname).id
@@ -477,14 +694,55 @@ class SetKucoinKeys(APIView):
         serial = KucoinKeysSerial(data=data_)
         if serial.is_valid():
             serial.save()
-            return Response({'status': True, 'message': 'Kucoin Keys Saved successfully'})
+            return Response({'status': True, 'message': 'Kucoin Keys Saved successfully'},status=status.HTTP_200_OK)
         else:
-            return Response({'status': False, 'message': serial.errors})
-class BotTesting(APIView):
-    def post(self,request,format=None):
+            return Response({'status': False, 'message': serial.errors},status=status.HTTP_400_BAD_REQUEST)
+    def patch(self,request,format=None):
+        data_=request.data
+        token = request.META.get('HTTP_AUTHORIZATION')
+        try:
+            d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
+        except:
+            return Response({'status': False, 'message': 'Token Expired'}, status=status.HTTP_401_UNAUTHORIZED)
+        uname = d.get('username')
+        User = get_user_model()
+        role = User.objects.get(username=uname).role
+        if str(role) == '1':
+            id_=User.objects.get(username=uname).id
+            obj=KucoinKeys1.objects.get(id=id_)
+            obj=KucoinKeysSerial(obj,data=data_,partial=True)
+            if obj.is_valid():
+                obj.save()
+                return Response({'status':True,'message':'Kucoin keys updated successfully'},status=status.HTTP_200_OK)
+            else:
+                return Response({'status':False,'message':obj.errors},status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({'status':False,'message':'You are not an Admin'},status=status.HTTP_401_UNAUTHORIZED)
 
-        Stb('BTCUSDT', 0.5, 'abcdff', 1, 'ghjk', 'jkhjhj', 'hsdjfs', 'dsfhkjs', 'dfshjkf',
-            'dsfksj', 'dfsjkl', 'dfksjf', 'dfsjhkfs','jklm','jfls','dfjks','fdsjkf')
-        return Response({'status': True, 'message': 'Bot execution competed'})
-
-
+class ExceptionAPI(APIView):
+    def get(self,request,format=None):
+        data_ = request.data
+        token = request.META.get('HTTP_AUTHORIZATION')
+        User = get_user_model()
+        try:
+            d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
+        except:
+            return Response({'status': False, 'message': 'Token Expired'}, status=status.HTTP_400_BAD_REQUEST)
+        uname = d.get('username')
+        role = User.objects.get(username=uname).role
+        if str(role) == '1':
+            if str(role) == '1':
+                if data_.get('id') is not None:
+                    try:
+                        bin = Exception.objects.get(username=data_.get('id'))
+                    except:
+                        return Response({'status': False, 'message': 'data does not exists'},
+                                        status=status.HTTP_404_NOT_FOUND)
+                    binserial = ExceptionSerial(bin)
+                    return Response({'status': True, 'data': binserial.data}, status=status.HTTP_200_OK)
+                else:
+                    bin = Exception.objects.all()
+                    binserial = ExceptionSerial(bin, many=True)
+                    return Response({'status': True, 'data': binserial.data}, status=status.HTTP_200_OK)
+            else:
+                return Response({'status':False,'message':'You are not an admin'},status=status.HTTP_401_UNAUTHORIZED)

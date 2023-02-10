@@ -16,6 +16,5 @@ urlpatterns = [
     path('setbit', views.SetBitmexKeys.as_view(), name='setting secret and primary keys'),
     path('setkuc', views.SetKucoinKeys.as_view(), name='setting secret and primary keys'),
     path('setgateio', views.SetGateKeys.as_view(), name='setting secret and primary keys'),
-    path('bottest', views.BotTesting.as_view(), name='Bottesting')
-
+    path('exception',views.ExceptionAPI.as_view(),name='exceptions')
 ]

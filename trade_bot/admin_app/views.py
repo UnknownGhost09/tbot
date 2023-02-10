@@ -1,7 +1,8 @@
 from django.shortcuts import render
 from rest_framework.views import APIView
 from core.serializer import UserSerial
-from core.serializer import AppSerial
+from .serializers import AppSerial
+from .models import App_model
 import jwt
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
@@ -16,7 +17,8 @@ KEYS = getattr(settings,'KEY_',None)
 from user_exchanges.serializer import ExchangesSeial,PairSerial
 from user_exchanges.models import Exchanges,PairTable
 import pandas as pd
-
+from .models import EmailModel,SmsModel
+from .serializers import Email_serializer,Sms_serializer
 class AdminView(APIView):
     def post(self,request,format=None):
         data_ = request.data
@@ -25,12 +27,10 @@ class AdminView(APIView):
         try:
             d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
         except:
-            return Response({'status': False, 'message': 'Token Expired'}, status=status.HTTP_401_UNAUTHORIZED)
-
+            return Response({'status':False,'message':'Token Expired'},status=status.HTTP_401_UNAUTHORIZED)
         uname=d.get('username')
         role=User.objects.get(username=uname).role
         if str(role)=='1':
-
             uname = data_.get('username')
             password = make_password(data_.get('password'))
             fname = data_.get('first_name')
@@ -48,7 +48,7 @@ class AdminView(APIView):
             obj = UserSerial(data=d)
             if obj.is_valid():
                 obj.save()
-                return Response({"status": True, 'message': 'subadmin created successfully'})
+                return Response({"status": True, 'message': 'subadmin created successfully'},status=status.HTTP_200_OK)
             else:
                 val=obj.errors
                 return Response({"status": False, "message": list(val.values())},status=status.HTTP_400_BAD_REQUEST)
@@ -57,24 +57,25 @@ class AdminView(APIView):
 
     def patch(self,request,format=None):
         data_=request.data
+        print(data_)
         token = request.META.get('HTTP_AUTHORIZATION')
         try:
             d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
         except:
-            return Response({'status': False, 'message': 'Token expired'}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({'status':False,'message':'Token Expired'},status=status.HTTP_401_UNAUTHORIZED)
         User=get_user_model()
         uname = d.get('username')
         try:
             user = User.objects.get(username=uname)
         except:
-            return Response({'msg': 'No user found'})
+            return Response({'status':False,'msg': 'No user found'},status=status.HTTP_400_BAD_REQUEST)
         role = user.role
         if str(role) == '1':
             print(data_.get('id'))
             try:
                 obj = User.objects.get(id=data_.get('id'))
             except:
-                return Response({'status':False,'message':'no id in data'},status=status.HTTP_400_BAD_REQUEST)
+                return Response({'status':False,'message':'No id in data'},status=status.HTTP_400_BAD_REQUEST)
             role=obj.role
             if role!='1':
                 usr = UserSerial(obj, data=data_, partial=True)
@@ -87,11 +88,9 @@ class AdminView(APIView):
                 else:
                     return Response({'status': False, 'message': usr.errors}, status=status.HTTP_400_BAD_REQUEST)
             else:
-                return Response({'status':False,'message':'You can not update admin data'},status=status.HTTP_400_BAD_REQUEST)
+                return Response({'status':False,'message':'You can not update admin data'},status=status.HTTP_401_UNAUTHORIZED)
         else:
             return Response({'status': False, 'message': 'you are not an admin'}, status=status.HTTP_401_UNAUTHORIZED)
-
-
 
 class UsersData(APIView):
     def get(self,request,format=None):
@@ -99,8 +98,7 @@ class UsersData(APIView):
         try:
             d=jwt.decode(token,key=KEYS,algorithms=['HS256'])
         except:
-            return Response({'status': False, 'message': 'Token Expired'}, status=status.HTTP_401_UNAUTHORIZED)
-
+            return Response({'status':False,'message':'Token Expired'},status=status.HTTP_401_UNAUTHORIZED)
         uname = d.get('username')
         User = get_user_model()
         role = User.objects.get(username=uname).role
@@ -135,17 +133,63 @@ class AppApi(APIView):
         try:
             d=jwt.decode(token,key=KEYS,algorithms=['HS256'])
         except:
-            return Response({'status': False, 'message': 'Token Expired'}, status=status.HTTP_401_UNAUTHORIZED)
-
-        data_=request.data
-        obj=AppSerial(data=data_,instance=request.user)
-        if obj.is_valid():
-            obj.save()
-            return Response({'status':True,'message':'data saved successfully'})
+            return Response({'status':False,'message':'Token Expired '},status=status.HTTP_401_UNAUTHORIZED)
+        uname = d.get('username')
+        User = get_user_model()
+        role = User.objects.get(username=uname).role
+        if str(role) == '1':
+            data_=request.data
+            print(data_)
+            obj=AppSerial(data=data_)
+            print('app serial',AppSerial)
+            if obj.is_valid():
+                obj.save()
+                return Response({'status':True,'message':'data saved successfully'},status=status.HTTP_200_OK)
+            else:
+                return Response({'Status':False,'message':obj.errors},status=status.HTTP_401_UNAUTHORIZED)
         else:
-            return Response({'Status':False,'message':obj.errors},status=status.HTTP_401_UNAUTHORIZED)
+            return Response({'status':False,'message':'You are not an admin'},status=status.HTTP_401_UNAUTHORIZED)
+    def patch(self,request,format=None):
+        data_=request.data
+        print(data_)
+        token = request.META.get('HTTP_AUTHORIZATION')
+        try:
+            d = jwt.decode(token,key=KEYS,algorithms=['HS256'])
+        except:
+            return Response({'status':False,'message':'Token Expired'},status=status.HTTP_401_UNAUTHORIZED)
+        uname = d.get('username')
+        User = get_user_model()
+        role = User.objects.get(username=uname).role
+        if str(role) == '1':
+            try:
+                obj = App_model.objects.get(id=1)
+            except:
+                return Response({'status':False,'message':'No app avilabe'},status=status.HTTP_400_BAD_REQUEST)
+            appserial = AppSerial(obj,data=data_, partial=True)
+            if appserial.is_valid():
+                appserial.save()
+                return Response({'status': True, 'message': 'Data updated successfuly'}, status=status.HTTP_200_OK)
+            else:
+                return Response({'status': False, 'message': appserial.errors}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({'status': False, 'message': 'you are not an admin'}, status=status.HTTP_401_UNAUTHORIZED)
 
+    def get(self,request,format=None):
+        token = request.META.get('HTTP_AUTHORIZATION')
+        try:
+            d = jwt.decode(token,key=KEYS,algorithms=['HS256'])
+        except:
+            return Response({'status':False,'message':'Token Expired'},status=status.HTTP_401_UNAUTHORIZED)
+        uname = d.get('username')
+        User = get_user_model()
+        role = User.objects.get(username=uname).role
 
+        if str(role) == '1':
+            obj=App_model.objects.all()
+            app_serial=AppSerial(obj,many=True)
+            return Response({'status':True,'app_data':app_serial.data},status=status.HTTP_200_OK)
+        else:
+            return Response({'status':False,'message':'you are not an admin'},status=status.HTTP_401_UNAUTHORIZED)
 class PriceAPI(APIView):
     def post(self,request,format=None):
         data_=request.data
@@ -154,8 +198,7 @@ class PriceAPI(APIView):
         try:
             d=jwt.decode(token,key=KEYS,algorithms=['HS256'])
         except:
-            return Response({'status': False, 'message': 'Token Expired'})
-
+            return Response({'status': False, 'message': 'Token Expired'},status=status.HTTP_401_UNAUTHORIZED)
         with open('price.json','r') as fl:
             URL=fl.read()
         URL=json.loads(URL)
@@ -166,17 +209,17 @@ class PriceAPI(APIView):
         price=price.to_dict()
         price['price']=list(price.get('price').values())[0]
         price['symbol']=list(price.get('symbol').values())[0]
-        return Response({'status':True,'price':price})
 
+        return Response({'status':True,'price':price},status=status.HTTP_200_OK)
 
 class UsersApi(APIView):
     def get(self,request,format=None):
+
         token = request.META.get('HTTP_AUTHORIZATION')
         try:
             d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
         except:
             return Response({'status': False, 'message': 'Token Expired'}, status=status.HTTP_401_UNAUTHORIZED)
-
         uname = d.get('username')
         User = get_user_model()
         role = User.objects.get(username=uname).role
@@ -197,7 +240,6 @@ class UsersApi(APIView):
         else:
             return Response({'status':False,'message':'You are not an admin'},status=status.HTTP_401_UNAUTHORIZED)
 
-
 class userInactiveApi(APIView):
     def post(self,request,format=None):
         data_=request.data
@@ -217,7 +259,7 @@ class userInactiveApi(APIView):
                     usr=User.objects.get(id=id)
                     print(usr.status)
                 except:
-                    return Response({'status':False,'message':'id is not avaliable'},status=status.HTTP_400_BAD_REQUEST)
+                    return Response({'status':False,'message':'id is not available'},status=status.HTTP_400_BAD_REQUEST)
                 if usr.status=='1':
                     usr.status='0'
                     usr.save()
@@ -235,8 +277,312 @@ class userInactiveApi(APIView):
         else:
             return Response({'status':False,'message':'Only admins can inactive any user or sub admin'},status=status.HTTP_401_UNAUTHORIZED)
 
+class Email_api(APIView):
+
+    def patch(self,request,format=None):
+        data_ = request.data
+        token = request.META.get('HTTP_AUTHORIZATION')
+        try:
+            d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
+        except:
+            return Response({'status': False, 'message': 'Token Expired'}, status=status.HTTP_401_UNAUTHORIZED)
+        uname = d.get('username')
+        User = get_user_model()
+        role = User.objects.get(username=uname).role
+        if str(role) == '1':
+            try:
+
+                obj=EmailModel.objects.get(name=data_.get('name'))
+            except:
+                return Response({'status':True,'message':'No email availabel'},status=status.HTTP_400_BAD_REQUEST)
+            emailserial=Email_serializer(obj,data=data_,partial=True)
+            if emailserial.is_valid():
+                emailserial.save()
+                try:
+                    with open(r'email.json', 'r') as fl:
+                        d=fl.read()
+                    d=json.loads(d)
+                    if data_.get('name')==d.get('name'):
+                        obj1=EmailModel.objects.get(name=data_.get('name'))
+                        obj1=Email_serializer(obj1)
+                        obj1=json.dumps(obj1.data)
+                        with open(r'email.json','w') as fl:
+                            fl.write(obj1)
+                    else:
+                        pass
+                except:
+                    pass
+                return Response({'status':True,'message':'data updated successfuly'},status=status.HTTP_200_OK)
+            else:
+                return Response({'status':False,'message':obj.errors},status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({'status':False,'message':'you are not an admin'},status=status.HTTP_401_UNAUTHORIZED)
+    def get(self,request,format=None):
+        token = request.META.get('HTTP_AUTHORIZATION')
+        try:
+            d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
+        except:
+            return Response({'status': False, 'message': 'Token Expired'}, status=status.HTTP_401_UNAUTHORIZED)
+        uname = d.get('username')
+        User = get_user_model()
+        role = User.objects.get(username=uname).role
+        if str(role) == '1':
+            obj=EmailModel.objects.filter(active_status='1')
+            email_serial=Email_serializer(obj,many=True)
+
+            return Response({'status':True,'email':email_serial.data},status=status.HTTP_200_OK)
+
+        else:
+            return Response({'status':False,'message':'you are not an admin'},status=status.HTTP_401_UNAUTHORIZED)
+
+    def post(self,request,format=None):
+        data_=request.data
+        token = request.META.get('HTTP_AUTHORIZATION')
+        try:
+            d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
+        except:
+            return Response({'status': False, 'message': 'Token Expired'}, status=status.HTTP_401_UNAUTHORIZED)
+        uname = d.get('username')
+        User = get_user_model()
+        role = User.objects.get(username=uname).role
+        if str(role) == '1':
+            emailserial=Email_serializer(data=data_)
+            if emailserial.is_valid():
+                emailserial.save()
+                return Response({'status':True,'message':'email data saved successfully'},status=status.HTTP_200_OK)
+            else:
+                obj = emailserial.errors
+                return Response({'status':False,'message':list(obj.values())},status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({'status':False,'message':'You are not an admin'},status=status.HTTP_401_UNAUTHORIZED)
+    def put(self,request,pk=None,format=None):
+
+        data_ = request.data
+        token = request.META.get('HTTP_AUTHORIZATION')
+        try:
+            d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
+        except:
+            return Response({'status': False, 'message': 'Token Expired'}, status=status.HTTP_401_UNAUTHORIZED)
+        uname = d.get('username')
+        User = get_user_model()
+        role = User.objects.get(username=uname).role
+        if str(role) == '1':
+            try:
+                obj=EmailModel.objects.get(name=data_.get('name'))
+                obj.active_status='0'
+                obj.save()
+                try:
+                    with open(r'email.json', 'r') as fl:
+                        d=fl.read()
+                    d=json.loads(d)
+                    if data_.get('name')==d.get('name'):
+                        with open(r'email.json','w') as fl:
+                            fl.write("")
+                    else:
+                        pass
+                except:
+                    pass
+                return Response({'status':True,'message':'email service deleted successfully'},status=status.HTTP_200_OK)
+            except:
+                return Response({'status':False,'message':'no email service avaliable'},status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response({'status':False,'message':'You are not a admin'},status=status.HTTP_401_UNAUTHORIZED)
+class Sms_api(APIView):
+
+    def patch(self,request,format=None):
+        data_ = request.data
+        token = request.META.get('HTTP_AUTHORIZATION')
+        try:
+            d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
+        except:
+            return Response({'status': False, 'message': 'Token Expired'}, status=status.HTTP_401_UNAUTHORIZED)
+        uname = d.get('username')
+        User = get_user_model()
+        role = User.objects.get(username=uname).role
+        if str(role) == '1':
+            try:
+                obj=SmsModel.objects.get(name=data_.get('name'))
+            except:
+                return Response({'status':False,'message':'No data available'},status=status.HTTP_400_BAD_REQUEST)
+            smsserial=Sms_serializer(obj,data=data_,partial=True)
+            if smsserial.is_valid():
+                smsserial.save()
+                try:
+                    with open(r'sms.json', 'r') as fl:
+                        d=fl.read()
+                    d=json.loads(d)
+                    if data_.get('name')==d.get('name'):
+                        obj1=SmsModel.objects.get(name=data_.get('name'))
+                        obj1=Sms_serializer(obj1)
+                        obj1=json.dumps(obj1.data)
+                        with open(r'sms.json','w') as fl:
+                            fl.write(obj1)
+                    else:
+                        pass
+                except:
+                    pass
+                return Response({'status':True,'message':'Data updated successfuly'},status=status.HTTP_200_OK)
+            else:
+                return Response({'status':False,'message':smsserial.errors},status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({'status':False,'message':'you are not an admin'},status=status.HTTP_401_UNAUTHORIZED)
+    def put(self,request,format=None):
+        data_ = request.data
+        token = request.META.get('HTTP_AUTHORIZATION')
+        try:
+            d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
+        except:
+            return Response({'status': False, 'message': 'Token Expired'}, status=status.HTTP_401_UNAUTHORIZED)
+        uname = d.get('username')
+        User = get_user_model()
+        role = User.objects.get(username=uname).role
+        if str(role) == '1':
+            try:
+                obj=SmsModel.objects.get(name=data_.get('name'))
+                obj.active_status='0'
+                obj.save()
+                try:
+                    with open(r'sms.json', 'r') as fl:
+                        d=fl.read()
+                    d=json.loads(d)
+                    if data_.get('name')==d.get('name'):
+                        with open(r'sms.json','w') as fl:
+                            fl.write("")
+                    else:
+                        pass
+                except:
+                    pass
+                return Response({'status':True,'message':'sms service deleted successfully'},status=status.HTTP_200_OK)
+            except:
+                return Response({'status':False,'message':'no sms service avaliable'},status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response({'status':False,'message':'You are not a admin'},status=status.HTTP_401_UNAUTHORIZED)
+    def get(self,request,format=None):
+        token = request.META.get('HTTP_AUTHORIZATION')
+        try:
+            d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
+        except:
+            return Response({'status': False, 'message': 'Token Expired'}, status=status.HTTP_401_UNAUTHORIZED)
+        uname = d.get('username')
+        User = get_user_model()
+        role = User.objects.get(username=uname).role
+        if str(role) == '1':
+            obj=SmsModel.objects.filter(active_status='1')
+            sms_serial=Sms_serializer(obj,many=True)
+            return Response({'status':True,'email':sms_serial.data},status=status.HTTP_200_OK)
+        else:
+            return Response({'status':False,'message':'you are not an admin'},status=status.HTTP_401_UNAUTHORIZED)
+    def post(self,request,format=None):
+        data_=request.data
+        token = request.META.get('HTTP_AUTHORIZATION')
+        try:
+            d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
+        except:
+            return Response({'status': False, 'message': 'Token Expired'}, status=status.HTTP_401_UNAUTHORIZED)
+        uname = d.get('username')
+        User = get_user_model()
+        role = User.objects.get(username=uname).role
+        if str(role) == '1':
+            smsserial=Sms_serializer(data=data_)
+            if smsserial.is_valid():
+                smsserial.save()
+                return Response({'status':True,'message':'Sms data saved successfully'},status=status.HTTP_200_OK)
+            else:
+                return Response({'status':False,'message':smsserial.errors},status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({'status':False,'message':'You are not an admin'},status=status.HTTP_401_UNAUTHORIZED)
+class SetEmail(APIView):
+    def get(self,request,format=None):
+        token = request.META.get('HTTP_AUTHORIZATION')
+        try:
+            d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
+        except:
+            return Response({'status': False, 'message': 'Token Expired'}, status=status.HTTP_401_UNAUTHORIZED)
+        uname = d.get('username')
+        User = get_user_model()
+        role = User.objects.get(username=uname).role
+        if str(role) == '1':
+            try:
+                with open(r'email.json','r') as fl:
+                    data=fl.read()
+                data=json.loads(data)
+                return Response({'status':True,'data':data},status=status.HTTP_200_OK)
+            except:
+                return Response({'status':False,'message':'no email service selected yet'},status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({'status':False,'message':'You are not an admin'},status=status.HTTP_401_UNAUTHORIZED)
+    def post(self,request,format=None):
+        data_=request.data
+        token = request.META.get('HTTP_AUTHORIZATION')
+        try:
+            d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
+        except:
+            return Response({'status': False, 'message': 'Token Expired'}, status=status.HTTP_401_UNAUTHORIZED)
+        uname = d.get('username')
+        User = get_user_model()
+        role = User.objects.get(username=uname).role
+        if str(role) == '1':
+            name=data_.get('name')
+            try:
+                obj=EmailModel.objects.get(name=name)
+            except:
+                return Response({'status':False,'message':'this email service is not available'},status=status.HTTP_400_BAD_REQUEST)
+            emailserail=Email_serializer(obj)
+            emailserail=json.dumps(emailserail.data)
+            with open(r'email.json','w') as fl:
+                fl.write(emailserail)
+            return Response({'status':True,'message':str(name) + ' selected successfully'},status=status.HTTP_200_OK)
+        else:
+            return Response({'status':False,'message':'you are not an admin'},status=status.HTTP_401_UNAUTHORIZED)
 
 
+class SetSms(APIView):
 
+    def get(self, request, format=None):
+        token = request.META.get('HTTP_AUTHORIZATION')
+        try:
+            d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
+        except:
+            return Response({'status': False, 'message': 'Token Expired'}, status=status.HTTP_401_UNAUTHORIZED)
+        uname = d.get('username')
+        User = get_user_model()
+        role = User.objects.get(username=uname).role
+        if str(role) == '1':
+            try:
 
+                with open(r'sms.json', 'r') as fl:
+                    data = fl.read()
+                data = json.loads(data)
+                return Response({'status': True, 'data': data}, status=status.HTTP_200_OK)
+            except:
+                return Response({'status': False, 'message': 'no sms service selected yet'},
+                                status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({'status': False, 'message': 'You are not an admin'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    def post(self, request, format=None):
+        data_ = request.data
+        token = request.META.get('HTTP_AUTHORIZATION')
+        try:
+            d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
+        except:
+            return Response({'status': False, 'message': 'Token Expired'}, status=status.HTTP_401_UNAUTHORIZED)
+        uname = d.get('username')
+        User = get_user_model()
+        role = User.objects.get(username=uname).role
+        if str(role) == '1':
+            name = data_.get('name')
+            try:
+                obj = SmsModel.objects.get(name=name)
+            except:
+                return Response({'status': False, 'message': 'this sms service is not avaliable'},
+                                status=status.HTTP_400_BAD_REQUEST)
+            smsserail = Sms_serializer(obj)
+            smsserail = json.dumps(smsserail.data)
+            with open(r'sms.json', 'w') as fl:
+                fl.write(smsserail)
+            return Response({'status': True, 'message': str(name) + ' selected successfully'},
+                            status=status.HTTP_200_OK)
+        else:
+            return Response({'status': False, 'message': 'you are not an admin'}, status=status.HTTP_401_UNAUTHORIZED)
 

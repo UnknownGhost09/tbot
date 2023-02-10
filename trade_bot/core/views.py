@@ -8,7 +8,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 import jwt
 import datetime
 from datetime import  timedelta
-from .serializer import AppSerial
+
 from django.conf import settings
 from rest_framework import status
 KEYS = getattr(settings, "KEY_", None)
@@ -23,7 +23,7 @@ class user_api(APIView):
         try:
             data=jwt.decode(token,key=KEYS,algorithms=['HS256'])
         except:
-            return Response({'status': False, 'message': 'Token Expired'})
+            return Response({'status': False, 'message': 'Token Expired'},status=status.HTTP_401_UNAUTHORIZED)
 
         print('hello')
         username=data.get('username')
@@ -32,10 +32,10 @@ class user_api(APIView):
         if len(obj)>0:
             usr=UserSerial(obj[0])
             usr=usr.data
-            return Response({'status':True,'message':'Verified'})
+            return Response({'status':True,'message':'Verified'},status=status.HTTP_200_OK)
 
         else:
-            return Response({'status':False,'message':obj.errors})
+            return Response({'status':False,'message':obj.errors},status=status.HTTP_400_BAD_REQUEST)
 
     def post(self,request,format=None):
         data_ = request.data
@@ -44,9 +44,8 @@ class user_api(APIView):
 
         try:
             d=jwt.decode(token,key=KEYS,algorithms=['HS256'])
-
         except:
-            return Response({'status': False, 'message': "Token Expired"})
+            return Response({'status': False, 'message': "Token Expired"},status=status.HTTP_401_UNAUTHORIZED)
 
         User = get_user_model()
         uname=data_.get('username')
@@ -66,41 +65,40 @@ class user_api(APIView):
         obj = UserSerial(data=d)
         if obj.is_valid():
             obj.save()
-            return Response({"status":True,'msg':'data saved successfully'})
-        return Response({"status":False, "msg": obj.errors})
+            return Response({"status":True,'msg':'data saved successfully'},status=status.HTTP_200_OK)
+        return Response({"status":False, "msg": obj.errors},status=status.HTTP_401_UNAUTHORIZED)
     def put(self,request,format=None):
         data_=request.data
         User = get_user_model()
         id_=data_.get('id')
         if id_ is None:
-            return Response({'status':False,'msg':'no id is in data'})
+            return Response({'status':False,'msg':'No id is in data'},status=status.HTTP_400_BAD_REQUEST)
         try:
             obj=User.objects.get(id=id_)
             usr=UserSerial(obj,data=data_)
             if usr.is_valid():
                 usr.save()
-                return Response({'status':True,'msg':'data update successfully'})
+                return Response({'status':True,'msg':'data update successfully'},status=status.HTTP_200_OK)
             else:
-                return Response({'status':False,'msg':usr.errors})
+                return Response({'status':False,'msg':usr.errors},status=status.HTTP_400_BAD_REQUEST)
         except:
-            return Response({'status':False,'msg':'not such user'})
+            return Response({'status':False,'msg':'not such user'},status=status.HTTP_400_BAD_REQUEST)
     def patch(self,request,format=None):
         data_ = request.data
         User = get_user_model()
         id_ = data_.get('id')
         if id_ is None:
-            return Response({'status': False, 'msg': 'no id is in data'})
+            return Response({'status': False, 'msg': 'No id is in data'},status=status.HTTP_400_BAD_REQUEST)
         try:
             obj = User.objects.get(id=id_)
             usr = UserSerial(obj, data=data_,partial=True)
             if usr.is_valid():
                 usr.save()
-                return Response({'status': True, 'msg': 'partial data update successfully'})
+                return Response({'status': True, 'msg': 'partial data update successfully'},status=status.HTTP_200_OK)
             else:
-                return Response({'status': False, 'msg': usr.errors})
+                return Response({'status': False, 'msg': usr.errors},status=status.HTTP_400_BAD_REQUEST)
         except:
-            return Response({'status': False, 'msg': 'not such user'})
-
+            return Response({'status': False, 'msg': 'not such user'},status=status.HTTP_400_BAD_REQUEST)
 
 class Login(APIView):
     def post(self,request,format=None):
@@ -119,7 +117,7 @@ class Login(APIView):
                 token = jwt.encode(payload=payload_,
                                    key=KEYS
                                    )
-                return Response({'status': True, 'token':token ,'message':'Login Successfull','username':uname,'email':email_})
+                return Response({'status': True, 'token':token ,'message':'Login Successfull','username':uname,'email':email_},status=status.HTTP_200_OK)
             email=User.objects.filter(email=uname)
 
             if len(email)>0:
@@ -129,11 +127,11 @@ class Login(APIView):
                     email_= user.email
                     payload_ = {'email':email_,'username':uname,'exp':datetime.datetime.utcnow()+timedelta(minutes=30)}
                     token = jwt.encode(payload=payload_,key=KEYS)
-                    return Response({'status': True, 'token': token,'message': 'Login Successfull','email':email_,'username':uname})
+                    return Response({'status': True, 'token': token,'message': 'Login Successfull','email':email_,'username':uname},status=status.HTTP_200_OK)
                 else:
-                    return Response({'message':'email or password incorrect','status':False},status=status.HTTP_401_UNAUTHORIZED)
+                    return Response({'status':False,'message':'email or password incorrect'},status=status.HTTP_401_UNAUTHORIZED)
             else:
-                return Response({'message':'username or password incorrect','status':False},status=status.HTTP_401_UNAUTHORIZED)
+                return Response({'status':False,'message':'username or password incorrect'},status=status.HTTP_401_UNAUTHORIZED)
         else:
             return Response({'status':False,'msg':'Please enter username and password'},status=status.HTTP_401_UNAUTHORIZED)
 class LogOutApi(APIView):
@@ -150,7 +148,7 @@ class LogOutApi(APIView):
                 payload=payload_data,
                 key=KEYS
             )
-            return Response({'status':True,'messages':'Logout Successfully'})
+            return Response({'status':True,'messages':'Logout Successfully'},status=status.HTTP_200_OK)
         except:
-            return Response({'status':False,'message':'User already logout'})
+            return Response({'status':False,'message':'User already logout'},status=status.HTTP_400_BAD_REQUEST)
 

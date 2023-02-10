@@ -101,9 +101,6 @@ class Exchanges(models.Model):
     api=models.CharField(max_length=300)
     socket = models.CharField(max_length=300,default='dsgdfgsd')
     status = models.CharField(max_length=200,default='1')
-    api_key = models.CharField(max_length=300,default='api')
-    secret_key = models.CharField(max_length=300,default='secret')
-    passphrase = models.CharField(max_length=200,default='1')
     class Meta:
         db_table='Exchanges'
 
@@ -112,32 +109,37 @@ class PairTable(models.Model):
     coin=models.CharField(max_length=200)
     class Meta:
         db_table='Pair_Table'
-
-class BinanceKeys(models.Model):
+class BinanceKeys1(models.Model):
+    sr =  models.AutoField(primary_key=True)
     id=models.ForeignKey('core.User', on_delete=models.CASCADE, db_column='id')
     api_key=models.CharField(max_length=500)
-    secret_key=models.CharField(max_length=500,primary_key=True)
+    secret_key=models.CharField(max_length=500)
+
     class Meta:
-        db_table='Binanace_keys'
-class BitmexKeys(models.Model):
+        db_table='Binanace_keys1'
+class BitmexKeys1(models.Model):
+    sr =  models.AutoField(primary_key=True)
     id = models.ForeignKey('core.User', on_delete=models.CASCADE, db_column='id')
     api_key=models.CharField(max_length=500)
-    secret_key=models.CharField(max_length=500,primary_key=True)
+    secret_key=models.CharField(max_length=500)
     class meta:
-        db_table='Bitmex_keys'
-class KucoinKeys(models.Model):
+        db_table='Bitmex_keys1'
+class KucoinKeys1(models.Model):
+    sr =  models.AutoField(primary_key=True)
     id = models.ForeignKey('core.User', on_delete=models.CASCADE, db_column='id')
     api_key = models.CharField(max_length=500)
-    secret_key = models.CharField(max_length=500,primary_key=True)
+    secret_key = models.CharField(max_length=500)
     passphrase=models.CharField(max_length=200)
     class Meta:
-        db_table='Kucoin_keys'
-class GateIoKeys(models.Model):
+        db_table='Kucoin_keys1'
+class GateIoKeys1(models.Model):
+    sr =  models.AutoField(primary_key=True)
     id = models.ForeignKey('core.User', on_delete=models.CASCADE, db_column='id')
     api_key = models.CharField(max_length=500)
-    secret_key = models.CharField(max_length=500,primary_key=True)
+    secret_key = models.CharField(max_length=500)
     class Meta:
-        db_table='Gate_keys'
+        db_table='Gate_keys1'
+
 
 
 

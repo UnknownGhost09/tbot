@@ -23,6 +23,7 @@ def fxn3(i):
         a.rename(columns={'rate':'price'},inplace=True)
         a.reset_index(inplace=True,drop=True)
         return a
+
 def fxn(i):
     if type(lst[i])==dict:
         if 'ticker' in lst[i]:
@@ -30,7 +31,6 @@ def fxn(i):
             abcd['symbol_name']=abcd['symbol'].str.replace('-','').str.replace('_','')
             abcd['exchange_name']=lst1[i].get('exchange_name')
             return abcd
-            
         elif 'data' in lst[i]:
             if 'ticker' in lst[i]['data']:
                 #abcd=list(map(fxn2,lst[i]['data']['ticker']))
@@ -67,8 +67,7 @@ def fxn4(i):
     if 'XBT' in i:
         return i.replace('XBT','BTC')
     else:
-        return i 
-
+        return i
 class First:
     def __init__(self,symbol):
         self.syb=symbol
@@ -105,6 +104,7 @@ class First:
             bit_data=None
             del bit_symbol
             del bit_max
+
         self.result=list(map(fxn,range(len(lst))))        
         self.result=list(map(fxn3,self.result))
         self.result=[[float(i.loc[0,'price']),i.loc[0,'exchange_name'],i.loc[0,'symbol']] for i in self.result if len(i)>0]
@@ -114,8 +114,7 @@ class First:
         self.result=[min(self.result),max(self.result)]
         return self.result
 
-obj=First('BTCUSDT')
-result=obj.coin()
+
 
 
 
