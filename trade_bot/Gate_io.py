@@ -49,6 +49,7 @@ class TradeBot:
         _api_key = self._api_key
         _secret_key = self._secret_key
         socket= self.socket
+        print(token)
         config = gate_api.Configuration(
             key=_api_key,
             secret=_secret_key
@@ -116,7 +117,7 @@ def on_message(ws, message):
         ws.close()
     except GateApiException as e:
 
-        scheduler_.cancel_job()
+
         data = {'id': id, 'status': False, 'message': str(e), 'side': side, 'symbol': symbol,
                 'quantity': amount, 'time': str(datetime.datetime.now()), 'Exchange_name': 'Gateio'}
         data = requests.post(url='http://192.168.18.110:8000/user_exchanges/gate', data=data,
@@ -124,6 +125,7 @@ def on_message(ws, message):
         data = data.json()
         print(data)
         ws.close()
+        scheduler_.cancel_job()
 def on_open(ws):
     # type: #(TradeBot) -> None
 

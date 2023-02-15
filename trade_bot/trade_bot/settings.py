@@ -54,7 +54,8 @@ CORS_ALLOW_HEADERS = [
     'x-csrftoken',
     'x-requested-with',
 ]
-KEY_ = 'DSFGREWDF-jndjndnnd-noONBVtgvbb'
+
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -73,8 +74,6 @@ INSTALLED_APPS = [
     'subadmin_app',
     'user_app',
 ]
-
-
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

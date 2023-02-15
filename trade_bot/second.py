@@ -111,7 +111,10 @@ class First:
         if bit_data!=None:
             self.result.append([float(bit_data.get('price')),'Bitmex',sy])
         #return self.result
-        self.result=[min(self.result),max(self.result)]
+        try:
+            self.result=[min(self.result),max(self.result)]
+        except:
+            return False
         return self.result
 
 

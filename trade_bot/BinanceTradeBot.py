@@ -18,7 +18,8 @@ class TradeBot:
         self.socket = socket + self.SYMBOL.lower() + "@kline_1m"
         self.API_KEY = api_key
         self.SECRET_KEY = secret_key
-        print(self.API_KEY,self.SECRET_KEY,self.socket,self.amount)
+        #print(self.API_KEY,self.SECRET_KEY,self.socket,self.amount)
+        print(self.token)
         self.client = Client(self.API_KEY, self.SECRET_KEY, testnet=True)
         self.ws = websocket.WebSocketApp(self.socket, on_open=self.on_open, on_close=self.on_close,
                                     on_error=self.on_error, on_message=self.on_message)
@@ -31,6 +32,7 @@ class TradeBot:
 
     def on_error(self,ws, *args):
         print("Here is an error:", args)
+        self.ws.close()
 
     def on_message(self, ws,*args):
         try:
@@ -42,21 +44,21 @@ class TradeBot:
             self.abc = self.my_order.get('fills')
             self.my_order.pop('selfTradePreventionMode')
             self.my_order.pop('fills')
-            data = requests.post(url=' http://192.168.18.110:8000/user_exchanges/bin', data=self.my_order,
-                                 headers={'Authorization': self.token})
-            data = data.json()
-            print(data)
+            result = requests.post(url=' http://192.168.18.110:8000/user_exchanges/bin', data=self.my_order,
+                                  headers={'Authorization': self.token})
+            result = result.json()
+            print(result)
 
             for i in self.abc:
                 i['clientOrderId'] = str(self.my_order.get('clientOrderId'))
-                data = requests.post(url='http://192.168.18.110:8000/user_exchanges/fills', data=i,
+                result = requests.post(url='http://192.168.18.110:8000/user_exchanges/fills', data=i,
                                      headers={'Authorization': self.token})
-                data = data.json()
-                print(data)
+                result = result.json()
+                print(result)
             self.ws.close()
 
         except BinanceAPIException as e:
-            scheduler_.cancel_job()
+
             data = {'id': self.id, 'status': False, 'message': str(e), 'side': self.mode, 'symbol': self.SYMBOL,
                     'quantity': self.amount, 'time': str(datetime.datetime.now()), 'Exchange_name': 'Binance'}
 
@@ -65,3 +67,4 @@ class TradeBot:
             data = data.json()
             print(data)
             self.ws.close()
+            scheduler_.cancel_job()

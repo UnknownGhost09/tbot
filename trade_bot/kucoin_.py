@@ -16,7 +16,8 @@ class TradeBot:
         self.socket=str(socket)+self.symbol
         self.passphrase=passphrase
         self.client = Client(self.api_key, self.secret_key, self.passphrase)
-        print(self.api_key,self.secret_key,self.id,self.size)
+        #print(self.api_key,self.secret_key,self.id,self.size)
+        print(token)
         if self.side == 'sell':
             self.side_ = Client.SIDE_SELL
         elif self.side == 'buy':
@@ -37,7 +38,7 @@ class TradeBot:
             print(data)
             self.ws.close()
         except KucoinAPIException as e:
-            scheduler_.cancel_job()
+
             data = {'id': self.id, 'status': False, 'message': str(e), 'side': self.side, 'symbol': self.symbol,
                     'quantity': self.size, 'time': str(datetime.datetime.now()), 'Exchange_name': 'Kucoin'}
             data = requests.post(url='http://192.168.18.110:8000/user_exchanges/kuk', data=data,
@@ -45,6 +46,7 @@ class TradeBot:
             data = data.json()
             print(data)
             self.ws.close()
+            scheduler_.cancel_job()
 
     def on_open(self,*args):
         print("Connection Opened")
@@ -55,6 +57,7 @@ class TradeBot:
     def on_error(self, *args):
 
         print("Here is an error:", args)
+        self.ws.close()
 
 
 

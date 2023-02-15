@@ -93,6 +93,7 @@ class AdminView(APIView):
             return Response({'status': False, 'message': 'you are not an admin'}, status=status.HTTP_401_UNAUTHORIZED)
 
 class UsersData(APIView):
+
     def get(self,request,format=None):
         token=request.META.get('HTTP_AUTHORIZATION')
         try:
@@ -121,7 +122,7 @@ class UsersData(APIView):
             pair = PairSerial(pair, many=True)
             return Response({'status': True, 'chart': {'date_joined': grp1}, 'total_users': len(df),
                              'Exchanges': user_exchange.data, 'total_exchanges': len(user_exchange.data),
-                             'total_pairs': len(pair.data), 'pairs': pair.data, 'active_users': active},
+                             'total_pairs': len(pair.data), 'active_users': active},
                             status=status.HTTP_200_OK)
         else:
             return Response({'status': False, 'message': 'You are not admin'}, status=status.HTTP_401_UNAUTHORIZED)

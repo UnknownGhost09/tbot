@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Binance_model,Bitmex_model,Kucoin_model,\
-    Gate_model,Exception,Fills,Exchanges,PairTable,BinanceKeys1,BitmexKeys1,GateIoKeys1,KucoinKeys1
+    Gate_model,Exception,Fills,Exchanges,PairTable,BinanceKeys1,\
+    BitmexKeys1,GateIoKeys1,KucoinKeys1
 class  BinanceSerial(serializers.ModelSerializer):
     class Meta:
         model=Binance_model
