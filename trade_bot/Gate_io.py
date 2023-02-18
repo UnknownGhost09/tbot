@@ -89,7 +89,6 @@ class GateWebSocketApp(WebSocketApp):
         data = json.dumps(data)
         logger.info('request: %s', data)
         self.send(data)
-
     def get_sign(self, message):
         h = hmac.new(self._api_secret.encode("utf8"), message.encode("utf8"), hashlib.sha512)
         return h.hexdigest()
@@ -102,7 +101,7 @@ class GateWebSocketApp(WebSocketApp):
 def on_message(ws, message):
     # type: (TradeBot, str) -> None
     # handle whatever message you received
-    print(message)
+
     logger.info("message received from server: {}".format(message))
     try:
         order = Order(account='margin', currency_pair=symbol,price=price,
@@ -110,18 +109,29 @@ def on_message(ws, message):
         order =spot_api.create_order(order)
 
         order['id']=id
+        exchanges = json.dumps(order)
+        with open(r'tradedata.json', 'a') as fl:
+            fl.write(",")
+            fl.write(exchanges)
         data = requests.post(url='http://192.168.18.110:8000/user_exchanges/gate', data=order,
                              headers={'Authorization': token})
+
         data = data.json()
         print(data)
         ws.close()
     except GateApiException as e:
-
-
         data = {'id': id, 'status': False, 'message': str(e), 'side': side, 'symbol': symbol,
                 'quantity': amount, 'time': str(datetime.datetime.now()), 'Exchange_name': 'Gateio'}
+        if 'Not enough balance' in data['message'] or 'NOT ENOUGH BALANCE' in data['message'] or 'insufficent Balance' in data['message'] or "INSUFFICIENT BALANCE" in data['messsage'] or 'BALANCE_NOT_ENOUGH' in data['message']:
+            data['message'] = 'Not enough balance'
+        exchanges = json.dumps(data)
+        with open(r'tradedata.json', 'a') as fl:
+            fl.write(",")
+            fl.write(exchanges)
         data = requests.post(url='http://192.168.18.110:8000/user_exchanges/gate', data=data,
                              headers={'Authorization': token})
+
+
         data = data.json()
         print(data)
         ws.close()

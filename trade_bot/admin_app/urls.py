@@ -12,4 +12,5 @@ urlpatterns = [
     path('sms',views.Sms_api.as_view(),name='Sms Smtp'),
     path('setemail',views.SetEmail.as_view(),name='Setting Email'),
     path('setsms',views.SetSms.as_view(),name='setting sms'),
+    path('logs',views.Logs.as_view(),name='logs views')
 ]

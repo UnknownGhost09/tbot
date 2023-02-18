@@ -8,7 +8,7 @@ class EmailModel(models.Model):
     username = models.CharField(max_length=200)
     password = models.CharField(max_length=200)
     port = models.CharField(max_length=200)
-    name = models.CharField(max_length=200,unique=True)
+    name = models.CharField(max_length=200)
     active_status=models.CharField(max_length=200,default='1')
 
 
@@ -16,7 +16,7 @@ class SmsModel(models.Model):
     api_key = models.CharField(max_length=200)
     secret_key = models.CharField(max_length=200)
     phone_no = models.CharField(max_length=200)
-    name = models.CharField(max_length=200,unique=True)
+    name = models.CharField(max_length=200)
     active_status = models.CharField(max_length=200, default='1')
 
 class App_model(models.Model):

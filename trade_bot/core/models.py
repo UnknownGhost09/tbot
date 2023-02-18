@@ -14,5 +14,5 @@ class User(AbstractUser):
     status = models.CharField(max_length=20, default='1')
     log_id = models.CharField(max_length=200,default=ip.get())
     updated_at = models.CharField(max_length=200,default=datetime.utcnow())
-    created_at = models.CharField(max_length=200,default=datetime.utcnow())
+    created_at = models.CharField(max_length=200)
 

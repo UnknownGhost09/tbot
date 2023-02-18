@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from django.conf import settings
 KEYS = getattr(settings,'KEY_',None)
 from rest_framework import status
-
+from datetime import datetime
 class SubAdminView(APIView):
     def post(self,request,format=None):
         data_ = request.data
@@ -33,11 +33,11 @@ class SubAdminView(APIView):
             phone_no = data_.get('phone_no')
             log_id = data_.get('log_id')
             created_at = data_.get('created_at')
-            updated_at = data_.get('updated_at')
-            email_verified_at = data_.get('email_verified_at')
+            #updated_at =
+            email_verified_at = str(datetime.utcnow())
             d = {'username': uname, 'password': password, 'first_name': fname,
                  'last_name': lname, 'email': em, 'phone_no': phone_no,
-                 'log_id': log_id, 'created_at': created_at, 'updated_at': updated_at,
+                 'log_id': log_id, 'created_at': created_at,
                  'email_verified_at': email_verified_at,'role':'3'}
             obj = UserSerial(data=d)
             if obj.is_valid():

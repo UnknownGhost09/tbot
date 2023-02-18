@@ -1,26 +1,17 @@
 import second
 import BinanceTradeBot
-
+import schedule
 import threading
 import kucoin_
 import Gate_io
 import time
-#from apscheduler.schedulers.background import BackgroundScheduler
 class Stb:
     def __init__(self,run ,SYMBOL, amount, token,id,binapi_key,binsecret_key,bitapi_key,bitsecret_key,gateapi_key,gatesecret_key,kucapi_key,kucsecret_key,passphrase,bin_socket,bit_socket,gate_socket,kuk_socket):
-        import schedule
-        global schedule
-
-
-        print('hello')
         global running
-        #global scheduler
         running=run
-        #scheduler = BackgroundScheduler()
-        #scheduler.add_job(lambda: job(SYMBOL,amount, token,id,binapi_key,binsecret_key,bitapi_key,bitsecret_key,gateapi_key,gatesecret_key,kucapi_key,kucsecret_key,passphrase,bin_socket,bit_socket,gate_socket,kuk_socket), 'interval', seconds=10)
         schedule.every(10).seconds.do(lambda: job(SYMBOL,amount, token,id,binapi_key,binsecret_key,bitapi_key,bitsecret_key,gateapi_key,gatesecret_key,kucapi_key,kucsecret_key,passphrase,bin_socket,bit_socket,gate_socket,kuk_socket))
         while running:
-            print('hey')
+            print('all jobs --> ' ,schedule.get_jobs())
             if not schedule.jobs:
                 break
             schedule.run_pending()
@@ -31,6 +22,8 @@ def cancel_job():
     global running
     running=False
     schedule.CancelJob
+    #schedule.cancel_job(job)
+    schedule.clear()
     print('Job Canceled')
 
 

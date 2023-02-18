@@ -68,7 +68,7 @@ INSTALLED_APPS = [
     'core',
     'rest_framework',
     'user_exchanges',
-    'rest_framework_simplejwt',
+
     'corsheaders',
     'admin_app',
     'subadmin_app',
@@ -196,5 +196,4 @@ EMAIL_HOST_PASSWORD='pgltclpdrckgjwkh'
 
 
 
-MEDIA_URL='/media/'
-MEDIA_ROOT=os.path.join(BASE_DIR,'media')
+

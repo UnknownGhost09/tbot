@@ -12,8 +12,9 @@ from datetime import  timedelta
 from django.conf import settings
 from rest_framework import status
 KEYS = getattr(settings, "KEY_", None)
-
 import public_ip as ip
+
+
 class user_api(APIView):
     def get(self,request,format=None):
         data_=request.data
@@ -36,7 +37,6 @@ class user_api(APIView):
 
         else:
             return Response({'status':False,'message':obj.errors},status=status.HTTP_400_BAD_REQUEST)
-
     def post(self,request,format=None):
         data_ = request.data
         token = request.META.get("HTTP-AUTHORIZATION")
@@ -65,40 +65,40 @@ class user_api(APIView):
         obj = UserSerial(data=d)
         if obj.is_valid():
             obj.save()
-            return Response({"status":True,'msg':'data saved successfully'},status=status.HTTP_200_OK)
-        return Response({"status":False, "msg": obj.errors},status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"status":True,'message':'data saved successfully'},status=status.HTTP_200_OK)
+        return Response({"status":False, "message": obj.errors},status=status.HTTP_401_UNAUTHORIZED)
     def put(self,request,format=None):
         data_=request.data
         User = get_user_model()
         id_=data_.get('id')
         if id_ is None:
-            return Response({'status':False,'msg':'No id is in data'},status=status.HTTP_400_BAD_REQUEST)
+            return Response({'status':False,'message':'No id is in data'},status=status.HTTP_400_BAD_REQUEST)
         try:
             obj=User.objects.get(id=id_)
             usr=UserSerial(obj,data=data_)
             if usr.is_valid():
                 usr.save()
-                return Response({'status':True,'msg':'data update successfully'},status=status.HTTP_200_OK)
+                return Response({'status':True,'message':'data update successfully'},status=status.HTTP_200_OK)
             else:
-                return Response({'status':False,'msg':usr.errors},status=status.HTTP_400_BAD_REQUEST)
+                return Response({'status':False,'message':usr.errors},status=status.HTTP_400_BAD_REQUEST)
         except:
-            return Response({'status':False,'msg':'not such user'},status=status.HTTP_400_BAD_REQUEST)
+            return Response({'status':False,'message':'not such user'},status=status.HTTP_400_BAD_REQUEST)
     def patch(self,request,format=None):
         data_ = request.data
         User = get_user_model()
         id_ = data_.get('id')
         if id_ is None:
-            return Response({'status': False, 'msg': 'No id is in data'},status=status.HTTP_400_BAD_REQUEST)
+            return Response({'status': False, 'message': 'No id is in data'},status=status.HTTP_400_BAD_REQUEST)
         try:
             obj = User.objects.get(id=id_)
             usr = UserSerial(obj, data=data_,partial=True)
             if usr.is_valid():
                 usr.save()
-                return Response({'status': True, 'msg': 'partial data update successfully'},status=status.HTTP_200_OK)
+                return Response({'status': True, 'message': 'partial data update successfully'},status=status.HTTP_200_OK)
             else:
-                return Response({'status': False, 'msg': usr.errors},status=status.HTTP_400_BAD_REQUEST)
+                return Response({'status': False, 'message': usr.errors},status=status.HTTP_400_BAD_REQUEST)
         except:
-            return Response({'status': False, 'msg': 'not such user'},status=status.HTTP_400_BAD_REQUEST)
+            return Response({'status': False, 'message': 'not such user'},status=status.HTTP_400_BAD_REQUEST)
 
 class Login(APIView):
     def post(self,request,format=None):
@@ -133,7 +133,7 @@ class Login(APIView):
             else:
                 return Response({'status':False,'message':'username or password incorrect'},status=status.HTTP_401_UNAUTHORIZED)
         else:
-            return Response({'status':False,'msg':'Please enter username and password'},status=status.HTTP_401_UNAUTHORIZED)
+            return Response({'status':False,'message':'Please enter username and password'},status=status.HTTP_401_UNAUTHORIZED)
 class LogOutApi(APIView):
 
     def post(self, request, format=None,):
@@ -148,7 +148,7 @@ class LogOutApi(APIView):
                 payload=payload_data,
                 key=KEYS
             )
-            return Response({'status':True,'messages':'Logout Successfully'},status=status.HTTP_200_OK)
+            return Response({'status':True,'message':'Logout Successfully'},status=status.HTTP_200_OK)
         except:
             return Response({'status':False,'message':'User already logout'},status=status.HTTP_400_BAD_REQUEST)
 

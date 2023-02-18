@@ -12,8 +12,16 @@ import jwt
 from django.conf import settings
 from rest_framework import status
 import json
+
 KEYS = getattr(settings, "KEY_", None)
 
+from binance.exceptions import BinanceAPIException
+from binance.client import Client as cl
+from kucoin.client import Client
+from kucoin.exceptions import KucoinAPIException
+import gate_api
+from gate_api.exceptions import ApiException, GateApiException
+from gate_api import SpotApi, MarginApi, WalletApi, ApiClient, Order
 class Binance_api(APIView):
     def get(self,request,format=None):
         data_ = request.data
@@ -52,7 +60,7 @@ class Binance_api(APIView):
     def post(self,request,format=None):
         data_ = request.data
         token=request.META.get('HTTP_AUTHORIZATION')
-        print(token)
+        #print(token)
         try:
             d=jwt.decode(token,key=KEYS,algorithms=['HS256'])
         except:
@@ -168,7 +176,7 @@ class Kucoin_api(APIView):
     def post(self,request,format=True):
         data_ = request.data
         token = request.META.get('HTTP_AUTHORIZATION')
-        print(token)
+        #print(token)
         try:
             d=jwt.decode(token,key=KEYS,algorithms=['HS256'])
         except:
@@ -229,7 +237,7 @@ class Gate_api(APIView):
     def post(self,request,format=None):
         token = request.META.get('HTTP_AUTHORIZATION')
         data_ = request.data
-        print(token)
+        #print(token)
         try:
             d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
         except:
@@ -257,7 +265,7 @@ class Fills_api(APIView):
     def post(self,request,format=None):
         token = request.META.get('HTTP_AUTHORIZATION')
         data_=request.data
-        print(token)
+        #print(token)
         try:
             d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
         except:
@@ -271,7 +279,7 @@ class Fills_api(APIView):
             return Response({'status':False,'message':obj.errors,'exchange_name':'Binance'},status=status.HTTP_400_BAD_REQUEST)
     def get(self,request,pk=None,format=None):
         token = request.META.get('HTTP_AUTHORIZATION')
-        client_order_id=pk  
+        client_order_id=pk
         try:
             d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
         except:
@@ -778,3 +786,74 @@ class ExceptionAPI(APIView):
                     return Response({'status': True, 'data': binserial.data}, status=status.HTTP_200_OK)
             else:
                 return Response({'status':False,'message':'You are not an admin'},status=status.HTTP_401_UNAUTHORIZED)
+
+class Balance(APIView):
+    def get(self,request,format=None):
+        token = request.META.get('HTTP_AUTHORIZATION')
+        try:
+            d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
+        except:
+            return Response({'status': False, 'message': 'Token Expired'}, status=status.HTTP_401_UNAUTHORIZED)
+        uname = d.get('username')
+        User = get_user_model()
+        id_ = User.objects.get(username=uname).id
+        try:
+            binkeys = BinanceKeys1.objects.get(id=id_)
+            binapi_key = binkeys.api_key
+            binsecret_key = binkeys.secret_key
+
+        except:
+            return Response({'status': False, 'message': 'Binance keys  are not there'},
+                            status=status.HTTP_404_NOT_FOUND)
+        try:
+            gatekeys = GateIoKeys1.objects.get(id=id_)
+            gateapi_key = gatekeys.api_key
+            gatesecret_key = gatekeys.secret_key
+
+        except:
+            return Response({'status': False, 'message': 'GateIo keys are not there'}, status=status.HTTP_404_NOT_FOUND)
+        try:
+            kuckeys = KucoinKeys1.objects.get(id=id_)
+            kucapi_key = kuckeys.api_key
+            kucsecret_key = kuckeys.secret_key
+            kucpassphrase = kuckeys.passphrase
+
+        except:
+            return Response({'status': False, 'message': 'Kucoin keys are not there '},
+                            status=status.HTTP_404_NOT_FOUND)
+
+        client = cl(api_key=binapi_key, api_secret=binsecret_key, testnet=True)
+
+        binbalance = client.get_account()['balances']
+
+        kukclient = Client(kucapi_key, kucsecret_key, kucpassphrase)
+
+        kucbalance = kukclient.get_accounts()
+
+        config = gate_api.Configuration(
+            key=gateapi_key,
+            secret=gatesecret_key
+
+        )
+        spot_api = SpotApi(ApiClient(config))
+        print('Kucoin balance',type(kucbalance[0]))
+        gateETH=spot_api.list_spot_accounts(currency="ETH")
+        gateBTC=spot_api.list_spot_accounts(currency="BTC")
+        gateUSDT=spot_api.list_spot_accounts(currency="USDT")
+        return Response([
+            {"name": "Binance",'fund': [
+        {'BNB':binbalance[0].get('free')},
+        {'BTC':binbalance[1].get('free')},
+        {'ETH':binbalance[3].get('free')},
+        {'LTC':binbalance[4].get('free')},
+        {'TRX':binbalance[5].get('free')},
+        {'USDT':binbalance[6].get('free')}
+            ]},
+        {"name": "kucoin",'fund':[
+            {'USDT':kucbalance[0].get('balance')}
+        ]},
+                 {"name": "gateio",'fund':[
+                     {'ETH':gateETH[0].available},
+                  {'BTC':gateBTC[0].available},
+                  {'USDT':gateUSDT[0].available}
+                 ]}], status=status.HTTP_200_OK)
