@@ -110,12 +110,8 @@ class First:
         self.result=[[float(i.loc[0,'price']),i.loc[0,'exchange_name'],i.loc[0,'symbol']] for i in self.result if len(i)>0]
         if bit_data!=None:
             self.result.append([float(bit_data.get('price')),'Bitmex',sy])
-        #return self.result
-        try:
-            self.result=[min(self.result),max(self.result)]
-        except:
-            return False
         return self.result
+
 
 
 

@@ -139,6 +139,8 @@ class GateIoKeys1(models.Model):
     secret_key = models.CharField(max_length=500)
     class Meta:
         db_table='Gate_keys1'
+class BotStop(models.Model):
+    signal=models.CharField(max_length=20,default='0')
 
 
 

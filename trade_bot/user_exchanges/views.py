@@ -3,11 +3,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
 from .models import Exchanges,PairTable,BinanceKeys1,BitmexKeys1,GateIoKeys1,KucoinKeys1,\
-    Binance_model,Bitmex_model,Gate_model,Kucoin_model,Exception,Fills
+    Binance_model,Bitmex_model,Gate_model,Kucoin_model,Exception,Fills,BotStop
 from .serializer import BinanceSerial,BitmexSerial,GateSerial,\
     KucoinSerial,ExceptionSerial,Fillserial,ExchangesSeial,PairSerial,\
-    BinanceKeysSerial,BitmexKeysSerial,GatekeySerial,KucoinKeysSerial
+    BinanceKeysSerial,BitmexKeysSerial,GatekeySerial,KucoinKeysSerial,BotStopSerial
 from scheduler_ import Stb
+
 import jwt
 from django.conf import settings
 from rest_framework import status
@@ -67,7 +68,7 @@ class Binance_api(APIView):
             return Response({'status':False,'message':'Token Expired'},status=status.HTTP_400_BAD_REQUEST)
 
 
-        if data_.get('status')=='True':
+        if data_.get('flag')=='True':
             obj = BinanceSerial(data=data_)
             if obj.is_valid():
                 obj.save()
@@ -396,10 +397,10 @@ class Bot_api(APIView):
             kuk_socket = None
         symbol=data_.get('symbol')
         amount=data_.get('amount')
-        running=True
+
         print(id, symbol, token, amount, binapi_key, binsecret_key, bitapi_key, bitsecret_key, gateapi_key,
               gatesecret_key, kucapi_key, kucsecret_key, kucpassphrase)
-        Stb(running,symbol, amount, token, id, binapi_key, binsecret_key, bitapi_key, bitsecret_key, gateapi_key,
+        Stb(symbol, amount, token, id, binapi_key, binsecret_key, bitapi_key, bitsecret_key, gateapi_key,
             gatesecret_key, kucapi_key, kucsecret_key, kucpassphrase, bin_socket, bit_socket, gate_socket,
             kuk_socket)
         return Response({'status': True, 'message': 'Bot execution competed'},status=status.HTTP_200_OK)
@@ -821,39 +822,79 @@ class Balance(APIView):
         except:
             return Response({'status': False, 'message': 'Kucoin keys are not there '},
                             status=status.HTTP_404_NOT_FOUND)
+        try:
+            client = cl(api_key=binapi_key, api_secret=binsecret_key, testnet=True)
 
-        client = cl(api_key=binapi_key, api_secret=binsecret_key, testnet=True)
+            binbalance = client.get_account()['balances']
+            binbalance=[{'asset':i.get('asset'),'free':i.get('free')} for i in binbalance]
+        except:
+            binbalance = [{'status':False,'message':'Max Retries Occurred'}]
 
-        binbalance = client.get_account()['balances']
+        try:
+            kukclient = Client(kucapi_key, kucsecret_key, kucpassphrase)
+            kucbalance = kukclient.get_accounts()
+        except:
+            kucbalance = [{'status':False,'message':'Max Retries Occurred'}]
 
-        kukclient = Client(kucapi_key, kucsecret_key, kucpassphrase)
+        try:
+            config = gate_api.Configuration(
+                key=gateapi_key,
+                secret=gatesecret_key
+            )
 
-        kucbalance = kukclient.get_accounts()
+            spot_api = SpotApi(ApiClient(config))
+            gateETH=spot_api.list_spot_accounts(currency="ETH")
+            gateETH = gateETH[0].available
+            gateBTC=spot_api.list_spot_accounts(currency="BTC")
+            gateBTC = gateBTC[0].available
+            gateUSDT=spot_api.list_spot_accounts(currency="USDT")
+            gateUSDT = gateUSDT[0].available
+        except:
+            gatebalance = [{'status':False,'message':'Max Retries Occurred'}]
+        return Response([{'name':'Binance','data':binbalance},{'name':'kucoin','data':kucbalance},
+                         {'name':'GateIo','data':[{'asset':'ETH','free':gateETH},{'asset':'BTC','free':gateBTC},
+                                                  {'asset':'USDT','free':gateUSDT}]}])
 
-        config = gate_api.Configuration(
-            key=gateapi_key,
-            secret=gatesecret_key
+class StopBot(APIView):
+    def get(self,request,format=None):
+        print('hello')
 
-        )
-        spot_api = SpotApi(ApiClient(config))
-        print('Kucoin balance',type(kucbalance[0]))
-        gateETH=spot_api.list_spot_accounts(currency="ETH")
-        gateBTC=spot_api.list_spot_accounts(currency="BTC")
-        gateUSDT=spot_api.list_spot_accounts(currency="USDT")
-        return Response([
-            {"name": "Binance",'fund': [
-        {'BNB':binbalance[0].get('free')},
-        {'BTC':binbalance[1].get('free')},
-        {'ETH':binbalance[3].get('free')},
-        {'LTC':binbalance[4].get('free')},
-        {'TRX':binbalance[5].get('free')},
-        {'USDT':binbalance[6].get('free')}
-            ]},
-        {"name": "kucoin",'fund':[
-            {'USDT':kucbalance[0].get('balance')}
-        ]},
-                 {"name": "gateio",'fund':[
-                     {'ETH':gateETH[0].available},
-                  {'BTC':gateBTC[0].available},
-                  {'USDT':gateUSDT[0].available}
-                 ]}], status=status.HTTP_200_OK)
+        token = request.META.get('HTTP_AUTHORIZATION')
+        try:
+            d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
+        except:
+            return Response({'status': False, 'message': 'Token Expired'}, status=status.HTTP_401_UNAUTHORIZED)
+        uname = d.get('username')
+        User = get_user_model()
+
+        return Response({'status':True,'message':'Bot stopped'},status=status.HTTP_200_OK)
+class StopStatus(APIView):
+    def get(self,request,format=None):
+        token = request.META.get('HTTP_AUTHORIZATION')
+        try:
+            d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
+        except:
+            return Response({'status': False, 'message': 'Token Expired'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        obj=BotStop.objects.get(id=1)
+        signal=obj.signal
+        return Response({'status':True,'message':signal},status=status.HTTP_200_OK)
+    def post(self,request,format=None):
+        token = request.META.get('HTTP_AUTHORIZATION')
+        try:
+            d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
+        except:
+            return Response({'status': False, 'message': 'Token Expired'}, status=status.HTTP_401_UNAUTHORIZED)
+        obj = BotStop.objects.get(id=1)
+        obj.signal='0'
+        obj.save()
+        return Response({'status':True,'message':'saved'},status=status.HTTP_200_OK)
+
+
+
+
+
+
+
+
+

@@ -18,5 +18,7 @@ urlpatterns = [
     path('setkuc', views.SetKucoinKeys.as_view(), name='setting secret and primary keys'),
     path('setgateio', views.SetGateKeys.as_view(), name='setting secret and primary keys'),
     path('exception',views.ExceptionAPI.as_view(),name='exceptions'),
-    path('balance',views.Balance.as_view(),name='getting balance')
+    path('balance',views.Balance.as_view(),name='getting balance'),
+    path('stopbot',views.StopBot.as_view(),name='stopping bot'),
+    path('stopstatus',views.StopStatus.as_view(),name='stop status')
 ]

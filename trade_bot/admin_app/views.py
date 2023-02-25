@@ -138,7 +138,7 @@ class AppApi(APIView):
         try:
             d=jwt.decode(token,key=KEYS,algorithms=['HS256'])
         except:
-            return Response({'status':False,'message':'Token Expired '},status=status.HTTP_401_UNAUTHORIZED)
+            return Response({'status':False,'message':'Token Expired'},status=status.HTTP_401_UNAUTHORIZED)
         uname = d.get('username')
         User = get_user_model()
         role = User.objects.get(username=uname).role
