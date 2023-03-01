@@ -34,12 +34,14 @@ class Stb:
         global td
         global initial
         global killorder
-
+        running=True
+        td=True
         self.symbol=SYMBOL
         self.amount=amount
         print(amount)
         self.token=token
         self.id=id
+        print('id-->',self.id)
         self.binapi_key=binapi_key
         self.binsecret_key=binsecret_key
         self.bitapi_key=bitapi_key
@@ -53,10 +55,15 @@ class Stb:
         self.bit_socket=bit_socket
         self.gate_socket=gate_socket
         self.kuc_socket=kuk_socket
-        self.client = Client(self.binapi_key, self.binsecret_key, testnet=True)
+        self.client = Client(self.binapi_key, self.binsecret_key)
+        signal = requests.patch(url='http://192.168.18.110:8000/user_exchanges/stopstatus')
+
         while td:
+            print('started')
             signal = requests.get(url='http://192.168.18.110:8000/user_exchanges/stopstatus')
             signal = signal.json()
+            print('hello')
+            print(signal)
             print(signal.get('message'))
             if signal.get('message') == '0':
                 if initial == 1:
@@ -70,15 +77,16 @@ class Stb:
         global initial
         global side
         global killorder
+        side=None
         while running:
-            signal=requests.get(url='http://192.168.18.110:8000/user_exchanges/status')
+            signal=requests.get(url='http://192.168.18.110:8000/user_exchanges/stopstatus')
             signal=signal.json()
             print(signal.get('message'))
             if signal.get('message')=='0':
 
                 if initial==1:
-                    running=False
-                    break
+                    print('BYE')
+                    return 0
                 else:
                     killorder=1
 
@@ -101,22 +109,25 @@ class Stb:
         lst = [i[1] for i in data]
         print(data)
         print(lst)
-        if 'Binance' in lst:
-            t1 = threading.Thread(target=binance_trade,
-                                  args=(self.symbol, side, self.amount, self.token, self.id, self.binapi_key, self.binsecret_key, self.bin_socket))
-            t1.start()
-        if 'Kucoin' in lst:
-            SYMBOL=data[lst.index('Kucoin')][2]
-            t2 = threading.Thread(target=kucoin_trade,
-            args=(SYMBOL, side, self.amount, self.token, id, self.kucapi_key, self.kucsecret_key, self.passphrase, self.kuc_socket))
-            t2.start()
-        if 'GateIo' in lst:
-            print('hello')
-            price = data[lst.index('GateIo')][0]
-            SYMBOL = data[lst.index('GateIo')][2]
-            t3 = threading.Thread(target=gateio_trade,
-            args=(SYMBOL, side, price, self.amount, self.token, id, self.gateapi_key, self.gatesecret_key, self.gate_socket))
-            t3.start()
+        if side is not None:
+            if 'Binance' in lst:
+                t1 = threading.Thread(target=binance_trade,
+                                      args=(self.symbol, side, self.amount, self.token, self.id, self.binapi_key, self.binsecret_key, self.bin_socket))
+                t1.start()
+            if 'Kucoin' in lst:
+                SYMBOL=data[lst.index('Kucoin')][2]
+                t2 = threading.Thread(target=kucoin_trade,
+                args=(SYMBOL, side, self.amount, self.token, self.id, self.kucapi_key, self.kucsecret_key, self.passphrase, self.kuc_socket))
+                t2.start()
+            if 'GateIo' in lst:
+                print('hello')
+                price = data[lst.index('GateIo')][0]
+                SYMBOL = data[lst.index('GateIo')][2]
+                t3 = threading.Thread(target=gateio_trade,
+                args=(SYMBOL, side, price, self.amount, self.token, self.id, self.gateapi_key, self.gatesecret_key, self.gate_socket))
+                t3.start()
+        else:
+            return 0
 
     def getting_data(self):
         starttime = '1 week ago UTC'
@@ -125,7 +136,6 @@ class Stb:
             'BTCUSDT', interval, starttime)
         for line in bars:
             del line[5:]
-        # 2 dimensional tabular data
         df = pd.DataFrame(
             bars, columns=['date', 'open', 'high', 'low', 'close'])
         df['7sma'] = df['close'].rolling(7).mean()
@@ -154,17 +164,6 @@ class Stb:
             else:
                 return None
         else:
-
             return None
-
-
-
-
-
-
-
-
-
-
 
 

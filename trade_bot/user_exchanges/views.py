@@ -23,6 +23,10 @@ from kucoin.exceptions import KucoinAPIException
 import gate_api
 from gate_api.exceptions import ApiException, GateApiException
 from gate_api import SpotApi, MarginApi, WalletApi, ApiClient, Order
+
+
+
+
 class Binance_api(APIView):
     def get(self,request,format=None):
         data_ = request.data
@@ -397,12 +401,28 @@ class Bot_api(APIView):
             kuk_socket = None
         symbol=data_.get('symbol')
         amount=data_.get('amount')
+        obj=BotStop.objects.get(id=1)
+        obj.status='true'
+
+        obj.save()
+        d={"status":"true"}
+        d=json.dumps(d)
+        with open(r'botstatus.json','w') as fl:
+            fl.write(d)
 
         print(id, symbol, token, amount, binapi_key, binsecret_key, bitapi_key, bitsecret_key, gateapi_key,
               gatesecret_key, kucapi_key, kucsecret_key, kucpassphrase)
         Stb(symbol, amount, token, id, binapi_key, binsecret_key, bitapi_key, bitsecret_key, gateapi_key,
             gatesecret_key, kucapi_key, kucsecret_key, kucpassphrase, bin_socket, bit_socket, gate_socket,
             kuk_socket)
+        d = {"status": "false"}
+        d = json.dumps(d)
+        with open(r'botstatus.json','w') as fl:
+            fl.write(d)
+        obj = BotStop.objects.get(id=1)
+        obj.status = 'false'
+        obj.save()
+
         return Response({'status': True, 'message': 'Bot execution competed'},status=status.HTTP_200_OK)
 
 class ConfigApi(APIView):
@@ -793,6 +813,7 @@ class Balance(APIView):
         token = request.META.get('HTTP_AUTHORIZATION')
         try:
             d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
+            print(d)
         except:
             return Response({'status': False, 'message': 'Token Expired'}, status=status.HTTP_401_UNAUTHORIZED)
         uname = d.get('username')
@@ -855,42 +876,37 @@ class Balance(APIView):
                          {'name':'GateIo','data':[{'asset':'ETH','free':gateETH},{'asset':'BTC','free':gateBTC},
                                                   {'asset':'USDT','free':gateUSDT}]}])
 
-class StopBot(APIView):
-    def get(self,request,format=None):
-        print('hello')
 
-        token = request.META.get('HTTP_AUTHORIZATION')
-        try:
-            d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
-        except:
-            return Response({'status': False, 'message': 'Token Expired'}, status=status.HTTP_401_UNAUTHORIZED)
-        uname = d.get('username')
-        User = get_user_model()
-
-        return Response({'status':True,'message':'Bot stopped'},status=status.HTTP_200_OK)
 class StopStatus(APIView):
     def get(self,request,format=None):
-        token = request.META.get('HTTP_AUTHORIZATION')
-        try:
-            d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
-        except:
-            return Response({'status': False, 'message': 'Token Expired'}, status=status.HTTP_401_UNAUTHORIZED)
 
         obj=BotStop.objects.get(id=1)
         signal=obj.signal
         return Response({'status':True,'message':signal},status=status.HTTP_200_OK)
     def post(self,request,format=None):
-        token = request.META.get('HTTP_AUTHORIZATION')
-        try:
-            d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
-        except:
-            return Response({'status': False, 'message': 'Token Expired'}, status=status.HTTP_401_UNAUTHORIZED)
+
         obj = BotStop.objects.get(id=1)
         obj.signal='0'
         obj.save()
         return Response({'status':True,'message':'saved'},status=status.HTTP_200_OK)
+    def patch(self,request,format=None):
 
+        obj = BotStop.objects.get(id=1)
+        obj.signal = '1'
+        obj.save()
+        return Response({'status': True, 'message': 'Bot started'}, status=status.HTTP_200_OK)
 
+class RunStatus(APIView):
+    def get(self,request,format=None):
+        token = request.META.get('HTTP_AUTHORIZATION')
+
+        try:
+            d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
+        except:
+            return Response({'status': False, 'message': 'Token Expired'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        obj = BotStop.objects.get(id=1)
+        return Response({'status':True,'data':obj.status},status=status.HTTP_200_OK)
 
 
 

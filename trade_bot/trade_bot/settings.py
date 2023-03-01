@@ -29,7 +29,7 @@ SECRET_KEY = 'django-insecure-(*g2a=fi6p(%n5_hrq)im8hn^##msr_43w59*)#6n$rs31g!a_
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.18.110']
+ALLOWED_HOSTS = ['*']
 CORS_ORIGIN_ALLOW_ALL = True
 
 '''CORS_ORIGIN_WHITELIST = (
@@ -43,6 +43,7 @@ CORS_ALLOW_METHODS = [
     'POST',
     'PUT',
 ]
+
 CORS_ALLOW_HEADERS = [
     'accept',
     'accept-encoding',
@@ -68,7 +69,6 @@ INSTALLED_APPS = [
     'core',
     'rest_framework',
     'user_exchanges',
-
     'corsheaders',
     'admin_app',
     'subadmin_app',
@@ -106,7 +106,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'trade_bot.wsgi.application'
-
 
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases

@@ -141,6 +141,7 @@ class GateIoKeys1(models.Model):
         db_table='Gate_keys1'
 class BotStop(models.Model):
     signal=models.CharField(max_length=20,default='0')
+    status=models.CharField(max_length=20,default='false')
 
 
 

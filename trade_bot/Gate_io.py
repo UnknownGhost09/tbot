@@ -150,7 +150,7 @@ def on_open(ws):
     print("connection oppended")
     logger.info('websocket  connected')
     ws.subscribe("spot.trades", [symbol], False)
-#token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImJveEBnbWFpbC5jb20iLCJ1c2VybmFtZSI6ImJveCIsImV4cCI6MTY3NzMxOTk2M30.m-mXvTEYkYX8I0dWnE0ktSzco1OSxTqQhKQY2UcOexQ'
+#token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImJveEBnbWFpbC5jb20iLCJ1c2VybmFtZSI6ImJveCIsImV4cCI6MTY4MDA4MjYwMX0.at2VCpus4HEQLQzhhl99GKoDf4HM5ivMYNQyznqG_GY'
 #api_key = '996fe20df5af3f7a53ce291b6e46a975'
 #secret_key = '41492892a8000de41686021ca2afd390f472731715da5020d29f0f5180ae8f53'
 

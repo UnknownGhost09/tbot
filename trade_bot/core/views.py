@@ -112,7 +112,7 @@ class Login(APIView):
                 login(request,user)
                 request.session['name']=uname
                 email_=user.email
-                payload_ ={'email':email_,'username':uname,'exp':datetime.datetime.utcnow() + timedelta(minutes=30)}
+                payload_ ={'email':email_,'username':uname,'exp':datetime.datetime.utcnow() + timedelta(days=30)}
 
                 token = jwt.encode(payload=payload_,
                                    key=KEYS
@@ -125,7 +125,7 @@ class Login(APIView):
                 user = authenticate(request, username=uname, password=password)
                 if user is not None:
                     email_= user.email
-                    payload_ = {'email':email_,'username':uname,'exp':datetime.datetime.utcnow()+timedelta(minutes=30)}
+                    payload_ = {'email':email_,'username':uname,'exp':datetime.datetime.utcnow()+timedelta(days=30)}
                     token = jwt.encode(payload=payload_,key=KEYS)
                     return Response({'status': True, 'token': token,'message': 'Login Successfull','email':email_,'username':uname},status=status.HTTP_200_OK)
                 else:
