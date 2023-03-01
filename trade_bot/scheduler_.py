@@ -138,8 +138,8 @@ class Stb:
             del line[5:]
         df = pd.DataFrame(
             bars, columns=['date', 'open', 'high', 'low', 'close'])
-        df['7sma'] = df['close'].rolling(7).mean()
-        df['25sma'] = df['close'].rolling(25).mean()
+        df['7sma'] = df['close'].rolling(5).mean()
+        df['25sma'] = df['close'].rolling(15).mean()
         return df
 
     def set_symbol(self, last_symbol):

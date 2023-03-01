@@ -116,8 +116,8 @@ def on_message(ws, message,*args):
         order =spot_api.create_order(order)
         ws.close()
         order['id']=id
-        print(order)
         exchanges = json.dumps(order)
+        print(order)
 
         with open(r'tradedata.json', 'a') as fl:
             fl.write(",")
