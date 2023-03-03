@@ -167,7 +167,7 @@ class Stb:
 
         elif initial == 'sell':
             val = ma7c - ma25c
-            if (val <= 0.01) & (ma7s > ma25s):
+            if val <= 0.01:
                 return 'sell'
             else:
                 return None
