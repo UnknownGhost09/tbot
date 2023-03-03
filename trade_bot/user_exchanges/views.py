@@ -879,7 +879,6 @@ class Balance(APIView):
 
 class StopStatus(APIView):
     def get(self,request,format=None):
-
         obj=BotStop.objects.get(id=1)
         signal=obj.signal
         return Response({'status':True,'message':signal},status=status.HTTP_200_OK)
@@ -890,12 +889,10 @@ class StopStatus(APIView):
         obj.save()
         return Response({'status':True,'message':'saved'},status=status.HTTP_200_OK)
     def patch(self,request,format=None):
-
         obj = BotStop.objects.get(id=1)
         obj.signal = '1'
         obj.save()
         return Response({'status': True, 'message': 'Bot started'}, status=status.HTTP_200_OK)
-
 class RunStatus(APIView):
     def get(self,request,format=None):
         token = request.META.get('HTTP_AUTHORIZATION')
@@ -907,10 +904,12 @@ class RunStatus(APIView):
 
         obj = BotStop.objects.get(id=1)
         return Response({'status':True,'data':obj.status},status=status.HTTP_200_OK)
-
-
-
-
-
-
-
+class InitialStatus(APIView):
+    def get(self,request,format=None):
+        obj=BotStop.objects.get(id=1)
+        return Response({'status':True,'data':obj.initial},status=status.HTTP_200_OK)
+    def post(self,request,format=None):
+        data_=request.data
+        obj = BotStop.objects.get(id=1)
+        obj.initial=data_.get('initial')
+        return Response({'status':True,'data':'data saved successfully'},status=status.HTTP_200_OK)

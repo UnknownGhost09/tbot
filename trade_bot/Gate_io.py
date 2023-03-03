@@ -24,11 +24,8 @@ class TradeBot:
         self.token=token
         self.id=id
         self._api_key = api_key
-        print(self._api_key)
         self._secret_key = secret_key
-        print(self._secret_key)
         self.socket=socket
-        print(self.socket)
     def global_(self):
         global symbol
         global side
@@ -44,11 +41,17 @@ class TradeBot:
         global spot_api
         global ws
         symbol = self.symbol
+        print(symbol)
         side=self.side
+        print(side)
         price=self.price
+        print(price)
         amount = self.amount
+        print(amount)
         token = self.token
+        print(token)
         id = self.id
+        print(id)
         _api_key = self._api_key
         print(_api_key)
         _secret_key = self._secret_key

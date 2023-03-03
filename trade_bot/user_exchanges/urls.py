@@ -22,5 +22,6 @@ urlpatterns = [
     path('balance',views.Balance.as_view(),name='getting balance'),
     path('stopstatus',views.StopStatus.as_view(),name='stop status'),
     path('runstatus',views.RunStatus.as_view(),name='running stauts of Bot'),
+    path('initial',views.InitialStatus.as_view(),name='initial status of Bot')
 
 ]

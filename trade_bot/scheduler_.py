@@ -9,7 +9,7 @@ import second
 running = True
 td = True
 killorder=0
-initial = 1
+
 def binance_trade(SYMBOL, side, amount, token, id, binapi_key, binsecret_key, bin_socket):
     bot = BinanceTradeBot.TradeBot(SYMBOL, side, amount, token, id, binapi_key, binsecret_key, bin_socket)
     return bot
@@ -36,12 +36,16 @@ class Stb:
         global killorder
         running=True
         td=True
+        initial=requests.get(url='http://192.168.18.110:8000/user_exchanges/initial')
+        initial=initial.json()
+        initial=initial.get('data')
+        print(initial)
         self.symbol=SYMBOL
         self.amount=amount
-        print(amount)
+        print('started....')
         self.token=token
         self.id=id
-        print('id-->',self.id)
+
         self.binapi_key=binapi_key
         self.binsecret_key=binsecret_key
         self.bitapi_key=bitapi_key
@@ -55,18 +59,18 @@ class Stb:
         self.bit_socket=bit_socket
         self.gate_socket=gate_socket
         self.kuc_socket=kuk_socket
-        self.client = Client(self.binapi_key, self.binsecret_key)
+        self.client = Client('7gr7eBfTq9IqaexFkjRVje17t8dTLjE30fck2oVucTURRqOqlYULW8xnKh8rMiZR',
+                             'Ai6F7MpVZvHQBHC0Yb07Djs5I2bmjUqsRVgssjPn3UzcviVn8VbSg5L3ZiC3pYjM')
         signal = requests.patch(url='http://192.168.18.110:8000/user_exchanges/stopstatus')
 
         while td:
-            print('started')
+
             signal = requests.get(url='http://192.168.18.110:8000/user_exchanges/stopstatus')
             signal = signal.json()
-            print('hello')
             print(signal)
             print(signal.get('message'))
             if signal.get('message') == '0':
-                if initial == 1:
+                if initial == '1':
                     td = False
                     break
             self.trade()
@@ -84,7 +88,7 @@ class Stb:
             print(signal.get('message'))
             if signal.get('message')=='0':
 
-                if initial==1:
+                if initial=='1':
                     print('BYE')
                     return 0
                 else:
@@ -95,10 +99,12 @@ class Stb:
             signal = self.set_symbol(initial)
             print(signal)
             if signal == 'buy':
-                initial = 0
+                initial = '0'
+                initial_ = requests.post(url='http://192.168.18.110:8000/user_exchanges/initial',data={'initial':'0'})
                 break
             if signal == 'sell':
-                initial = 1
+                initial = '1'
+                initial_ = requests.post(url='http://192.168.18.110:8000/user_exchanges/initial', data={'initial': '1'})
                 break
         if signal == 'buy':
             side = 'buy'
@@ -144,19 +150,21 @@ class Stb:
 
     def set_symbol(self, last_symbol):
         initial = 'buy'
-        if last_symbol == 0:
+        if last_symbol == '0': # ye condition chlini chahiye ye kyu nhi chl rhi
             initial = 'sell'
         df = self.getting_data()
         ma7c = float(df.tail(1)['7sma'])
         ma25c = float(df.tail(1)['25sma'])
         ma7s = float(df.take([-2])['7sma'])
         ma25s = float(df.take([-2])['25sma'])
+        print('MA(5)--> ',ma7s,' MA(15)--> ',ma25s)
         if initial == 'buy':
             val = ma7c - ma25c
             if (val >= 0.01) and (ma7s < ma25s):
                 return 'buy'
             else:
                 return None
+
         elif initial == 'sell':
             val = ma7c - ma25c
             if (val <= 0.01) & (ma7s > ma25s):
