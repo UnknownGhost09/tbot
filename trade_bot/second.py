@@ -104,7 +104,6 @@ class First:
             bit_data=None
             del bit_symbol
             del bit_max
-
         self.result=list(map(fxn,range(len(lst))))        
         self.result=list(map(fxn3,self.result))
         self.result=[[float(i.loc[0,'price']),i.loc[0,'exchange_name'],i.loc[0,'symbol']] for i in self.result if len(i)>0]

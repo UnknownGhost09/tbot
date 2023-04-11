@@ -20,6 +20,7 @@ import pandas as pd
 from .models import EmailModel,SmsModel
 from .serializers import Email_serializer,Sms_serializer
 from django.http import JsonResponse
+
 class AdminView(APIView):
     def post(self,request,format=None):
         data_ = request.data

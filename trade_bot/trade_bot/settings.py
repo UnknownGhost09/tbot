@@ -16,7 +16,7 @@ import pymysql
 pymysql.install_as_MySQLdb()
 
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 KEY_ = "wdfsghdhgyg---jhhbbvvbnj----xcvbbyhhgbbnuyh"
@@ -27,11 +27,10 @@ KEY_ = "wdfsghdhgyg---jhhbbvvbnj----xcvbbyhhgbbnuyh"
 SECRET_KEY = 'django-insecure-(*g2a=fi6p(%n5_hrq)im8hn^##msr_43w59*)#6n$rs31g!a_'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 CORS_ORIGIN_ALLOW_ALL = True
-
 '''CORS_ORIGIN_WHITELIST = (
   'http://localhost:8000',
 )'''
@@ -60,6 +59,8 @@ CORS_ALLOW_HEADERS = [
 # Application definition
 
 INSTALLED_APPS = [
+
+    'channels',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -73,6 +74,7 @@ INSTALLED_APPS = [
     'admin_app',
     'subadmin_app',
     'user_app',
+
 ]
 
 MIDDLEWARE = [
@@ -92,7 +94,7 @@ ROOT_URLCONF = 'trade_bot.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR,'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -104,11 +106,16 @@ TEMPLATES = [
         },
     },
 ]
+ASGI_APPLICATION = "trade_bot.asgi.application"
 
-WSGI_APPLICATION = 'trade_bot.wsgi.application'
+#WSGI_APPLICATION = 'prj.wsgi.application'
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': "channels.layers.InMemoryChannelLayer"
+        }
+    }
 
-# Database
-# https://docs.djangoproject.com/en/3.2/ref/settings/#databases
+
 
 DATABASES = {
     'default': {

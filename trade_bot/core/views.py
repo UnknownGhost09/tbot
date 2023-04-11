@@ -14,22 +14,18 @@ from rest_framework import status
 KEYS = getattr(settings, "KEY_", None)
 import public_ip as ip
 
-
 class user_api(APIView):
     def get(self,request,format=None):
         data_=request.data
         token = request.META.get('HTTP_AUTHORIZATION')
         User = get_user_model()
-        print(type(token))
+
         try:
             data=jwt.decode(token,key=KEYS,algorithms=['HS256'])
         except:
             return Response({'status': False, 'message': 'Token Expired'},status=status.HTTP_401_UNAUTHORIZED)
-
-        print('hello')
         username=data.get('username')
         obj=User.objects.filter(username=username)
-
         if len(obj)>0:
             usr=UserSerial(obj[0])
             usr=usr.data
@@ -40,8 +36,6 @@ class user_api(APIView):
     def post(self,request,format=None):
         data_ = request.data
         token = request.META.get("HTTP-AUTHORIZATION")
-        #token = data_.get('Authorization') #for own work
-
         try:
             d=jwt.decode(token,key=KEYS,algorithms=['HS256'])
         except:
@@ -100,9 +94,12 @@ class user_api(APIView):
         except:
             return Response({'status': False, 'message': 'not such user'},status=status.HTTP_400_BAD_REQUEST)
 
+
+
 class Login(APIView):
     def post(self,request,format=None):
         data_=request.data
+
         uname= data_.get('username')
         password = data_.get('password')
         User = get_user_model()

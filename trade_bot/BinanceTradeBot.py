@@ -2,11 +2,11 @@ import websocket
 import json
 from binance.exceptions import BinanceAPIException
 from binance.client import Client
-import pandas as pd
-
 import requests
 import datetime
-
+import os
+from dotenv import load_dotenv
+from pathlib import Path
 amount = 0.01
 repeat = 'Once'
 initial = 1
@@ -15,6 +15,9 @@ initial = 1
 class TradeBot:
     def __init__(self, s, side, amount, token, id, api_key, secret_key, socket):
         self.SYMBOL = s
+        path = Path("./config.env")
+        load_dotenv(dotenv_path=path)
+        self.SITE_URL = os.getenv('SITE_URL')
         self.amount = amount
         self.token = token
         self.id = id
@@ -44,10 +47,31 @@ class TradeBot:
                                                      side=self.mode, type=self.client.ORDER_TYPE_MARKET,
                                                      quantity=self.amount)
             print(self.my_order)
-            self.my_order = json.dumps(self.my_order)
+            self.order = json.dumps(self.my_order)
             with open('tradehistory.json', 'a') as fl:
                 fl.write(',')
-                fl.write(self.my_order)
+                fl.write(self.order)
+            price = self.my_order.get('fills')[-1].get('price')
+            self.my_order.pop('fills')
+            b = ['origQty', 'cummulativeQuoteQty', 'selfTradePreventionMode']
+            for i in b:
+                self.my_order.pop(i)
+            self.my_order['price'] = price
+            self.my_order['id'] = self.id
+            self.my_order['executedQty'] = self.amount
+            self.my_order['flag']='True'
+            data = requests.post(url=self.SITE_URL + '/user_exchanges/bin', data=self.my_order,
+                                 headers={'Authorization': self.token})
+            data = data.json()
+            print(data)
+            logs={'id':self.id,'symbol':self.SYMBOL,
+                  'price':price,
+                  'quantity':self.amount,'side':self.mode,'exchange':'Binance'}
+            data=requests.post(url=self.SITE_URL+'/user_exchanges/logs',data=logs,
+                               headers={'Authorization':self.token})
+
+            data = data.json()
+            print(data)
             ws.close()
         except BinanceAPIException as e:
             print(e)
@@ -57,5 +81,12 @@ class TradeBot:
             with open('tradehistory.json', 'a') as fl:
                 fl.write(',')
                 fl.write(data)
+            data = {'id': self.id, 'status': False, 'message': 'Balance not found', 'side': self.mode,
+                    'symbol': self.SYMBOL,
+                    'quantity': self.amount, 'time': str(datetime.datetime.now()), 'Exchange_name': 'Binance'}
+            data = requests.post(url=self.SITE_URL + '/user_exchanges/bin', data=data,
+                                 headers={'Authorization': self.token})
+            data = data.json()
+            print(data)
             ws.close()
             # return e

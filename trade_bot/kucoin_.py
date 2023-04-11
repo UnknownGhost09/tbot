@@ -5,9 +5,16 @@ import datetime
 import json
 import websocket
 from websocket import WebSocketApp
+import os
+from dotenv import load_dotenv
+from pathlib import Path
+
 
 class TradeBot:
     def __init__(self, symbol, side, amount, token, id, api_key, secret_key, passphrase, socket):
+        path = Path("./config.env")
+        load_dotenv(dotenv_path=path)
+        self.SITE_URL = os.getenv('SITE_URL')
         self.symbol = symbol
         self.side = side
         self.amount = amount
@@ -41,8 +48,17 @@ class TradeBot:
             with open(r'tradedata.json', 'a') as fl:
                 fl.write(",")
                 fl.write(exchanges)
-            data = requests.post(url='http://192.168.18.110:8000/user_exchanges/kuk', data=order,
+            order['flag']='True'
+            data = requests.post(url=self.SITE_URL+'/user_exchanges/kuk', data=order,
                                  headers={'Authorization': self.token})
+            data = data.json()
+            print(data)
+            logs = {'id': self.id, 'symbol': self.symbol,
+                    'price': '',
+                    'quantity': self.amount, 'side': self.side_, 'exchange': 'Kucoin'}
+            data = requests.post(url=self.SITE_URL + '/user_exchanges/logs', data=logs,
+                                 headers={'Authorization': self.token})
+
             data = data.json()
             print(data)
             ws.close()
@@ -59,7 +75,7 @@ class TradeBot:
             with open(r'tradedata.json', 'a') as fl:
                 fl.write(",")
                 fl.write(exchanges)
-            data = requests.post(url='http://192.168.18.110:8000/user_exchanges/kuk', data=data,
+            data = requests.post(url=self.SITE_URL+'/user_exchanges/kuk', data=data,
                                  headers={'Authorization': self.token})
             data = data.json()
             print(data)
@@ -73,15 +89,3 @@ class TradeBot:
         print("Here is an error:", error)
         ws.close()
 
-'''
-token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImJveEBnbWFpbC5jb20iLCJ1c2VybmFtZSI6ImJveCIsImV4cCI6MTY4MDI1NjMxMn0.MdGcZBfXlfXANkxi733KZG86OsB_Ctmpct8czQMgRgk'
-api_key = '63c10b64d3c0b80001976a4a'
-secret_key = '5462283a-15d3-4c32-85e4-f24a00bc8c27'
-passphrase = 'Urveesh@123'
-
-socket = 'wss://ws-api.kucoin.com/endpoint/market/ticker:'
-
-obj=TradeBot("BTC-USDT","buy",1,token,1,api_key,secret_key,passphrase,socket)
-obj
-
-'''

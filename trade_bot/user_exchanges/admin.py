@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Binance_model,Bitmex_model,Exception,Gate_model,Kucoin_model,Fills,Exchanges,PairTable,BinanceKeys1,BitmexKeys1,GateIoKeys1,KucoinKeys1,BotStop
+from .models import Binance_model,Bitmex_model,Exception,Gate_model,Kucoin_model,Fills,Exchanges,PairTable,\
+    BinanceKeys1,BitmexKeys1,GateIoKeys1,KucoinKeys1,BotStop,KillBot,LogsModel
 # Register your models here.
 admin.site.register(Binance_model)
 admin.site.register(Bitmex_model)
@@ -14,3 +15,5 @@ admin.site.register(GateIoKeys1)
 admin.site.register(BitmexKeys1)
 admin.site.register(KucoinKeys1)
 admin.site.register(BotStop)
+admin.site.register(KillBot)
+admin.site.register(LogsModel)

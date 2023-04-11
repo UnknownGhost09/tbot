@@ -3,10 +3,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth import get_user_model
 from .models import Exchanges,PairTable,BinanceKeys1,BitmexKeys1,GateIoKeys1,KucoinKeys1,\
-    Binance_model,Bitmex_model,Gate_model,Kucoin_model,Exception,Fills,BotStop
+    Binance_model,Bitmex_model,Gate_model,Kucoin_model,Exception,Fills,BotStop,KillBot,LogsModel
 from .serializer import BinanceSerial,BitmexSerial,GateSerial,\
     KucoinSerial,ExceptionSerial,Fillserial,ExchangesSeial,PairSerial,\
-    BinanceKeysSerial,BitmexKeysSerial,GatekeySerial,KucoinKeysSerial,BotStopSerial
+    BinanceKeysSerial,BitmexKeysSerial,GatekeySerial,KucoinKeysSerial,BotStopSerial,LogSerials
 from scheduler_ import Stb
 
 import jwt
@@ -187,8 +187,8 @@ class Kucoin_api(APIView):
         except:
             return Response({'status': False, 'message': 'Token Expired'},status=status.HTTP_401_UNAUTHORIZED)
 
-        status_ = data_.get('status')
-        if status_=='True':
+        flag = data_.get('flag')
+        if flag=='True':
             obj = KucoinSerial(data=data_)
             if obj.is_valid():
                 obj.save()
@@ -248,8 +248,8 @@ class Gate_api(APIView):
         except:
             return Response({'status': False, 'message': 'token Expired'},status=status.HTTP_401_UNAUTHORIZED)
 
-        status_ = data_.get('status')
-        if status_=='True':
+        flag = data_.get('flag')
+        if flag=='True':
             obj = GateSerial(data=data_)
             if obj.is_valid():
                 obj.save()
@@ -401,8 +401,10 @@ class Bot_api(APIView):
             kuk_socket = None
         symbol=data_.get('symbol')
         amount=data_.get('amount')
-        obj=BotStop.objects.get(id=1)
-        obj.status='true'
+        obj=BotStop.objects.all()
+        obj=obj[0]
+
+        obj.status='1'
 
         obj.save()
         d={"status":"true"}
@@ -419,10 +421,10 @@ class Bot_api(APIView):
         d = json.dumps(d)
         with open(r'botstatus.json','w') as fl:
             fl.write(d)
-        obj = BotStop.objects.get(id=1)
-        obj.status = 'false'
+        obj = BotStop.objects.all()
+        obj=obj[0]
+        obj.status = '0'
         obj.save()
-
         return Response({'status': True, 'message': 'Bot execution competed'},status=status.HTTP_200_OK)
 
 class ConfigApi(APIView):
@@ -862,7 +864,6 @@ class Balance(APIView):
                 key=gateapi_key,
                 secret=gatesecret_key
             )
-
             spot_api = SpotApi(ApiClient(config))
             gateETH=spot_api.list_spot_accounts(currency="ETH")
             gateETH = gateETH[0].available
@@ -879,37 +880,122 @@ class Balance(APIView):
 
 class StopStatus(APIView):
     def get(self,request,format=None):
-        obj=BotStop.objects.get(id=1)
+        obj=BotStop.objects.all()
+        obj2=KillBot.objects.all()
+        obj=obj[0]
+        obj2=obj2[0]
         signal=obj.signal
-        return Response({'status':True,'message':signal},status=status.HTTP_200_OK)
+        shut_down=obj2.shut_down
+        return Response({'status':True,'shut_down':shut_down,'signal':signal},status=status.HTTP_200_OK)
     def post(self,request,format=None):
-
-        obj = BotStop.objects.get(id=1)
+        obj = BotStop.objects.all()
+        obj=obj[0]
         obj.signal='0'
         obj.save()
         return Response({'status':True,'message':'saved'},status=status.HTTP_200_OK)
-    def patch(self,request,format=None):
-        obj = BotStop.objects.get(id=1)
+    def put(self,request,format=None):
+        obj = BotStop.objects.all()
+        obj=obj[0]
         obj.signal = '1'
         obj.save()
         return Response({'status': True, 'message': 'Bot started'}, status=status.HTTP_200_OK)
+    def patch(self,request,format=None):
+        data=request.data
+        obj = KillBot.objects.all()
+        obj=obj[0]
+        obj.shut_down = data.get('shut_down')
+        if obj.shut_down == 1:
+            obj.save()
+            obj1 = BotStop.objects.all()
+            obj1 = obj1[0]
+            obj1.status = '0'
+            obj1.save()
+            return Response({'status': True, 'message': 'Switched Off '}, status=status.HTTP_200_OK)
+        else:
+            obj.save()
+
+            return Response({'status': True, 'message': 'Switched ON'}, status=status.HTTP_200_OK)
+
 class RunStatus(APIView):
+    def get(self, request):
+        token = request.META.get('HTTP_AUTHORIZATION')
+        try:
+            d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
+        except:
+            return Response({'status': False, 'message': 'Token Expired'}, status=status.HTTP_401_UNAUTHORIZED)
+        obj = BotStop.objects.all()
+        obj=obj[0]
+        obj.status=request.data.get('status')
+        return Response({'status':True,'data':'Query ok'},status=status.HTTP_200_OK)
+
+class InitialStatus(APIView):
+    def get(self,request,format=None):
+        obj=BotStop.objects.all()
+        obj=obj[0]
+        return Response({'status':True,'initial':obj.initial},status=status.HTTP_200_OK)
+    def post(self,request,format=None):
+        data_=request.data
+        obj = BotStop.objects.all()
+        obj=obj[0]
+        obj.initial=data_.get('initial')
+        obj.save()
+        return Response({'status':True,'data':'data saved successfully'},status=status.HTTP_200_OK)
+
+
+    def patch(self,request,format=None):
+        token = request.META.get('HTTP_AUTHORIZATION')
+        data=request.data
+        try:
+            d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
+        except:
+            return Response({'status': False, 'message': 'Token Expired'},
+                            status=status.HTTP_401_UNAUTHORIZED)
+
+        obj = BotStop.objects.all()
+        obj = obj[0]
+        obj.initial = data.get('initial')
+        obj.save()
+        if data.get('initial')=='1':
+            state='Buy'
+        elif data.get('initial')=='0':
+            state='Sell'
+        return Response({'status':True,'message':state},status=status.HTTP_200_OK)
+
+class LogsApi(APIView):
     def get(self,request,format=None):
         token = request.META.get('HTTP_AUTHORIZATION')
 
         try:
             d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
         except:
-            return Response({'status': False, 'message': 'Token Expired'}, status=status.HTTP_401_UNAUTHORIZED)
-
-        obj = BotStop.objects.get(id=1)
-        return Response({'status':True,'data':obj.status},status=status.HTTP_200_OK)
-class InitialStatus(APIView):
-    def get(self,request,format=None):
-        obj=BotStop.objects.get(id=1)
-        return Response({'status':True,'data':obj.initial},status=status.HTTP_200_OK)
+            return Response({'status': False, 'message': 'Token Expired'},
+                            status=status.HTTP_401_UNAUTHORIZED)
+        obj=LogsModel.objects.all()
+        serials=LogSerials(obj,many=True)
+        return Response({'status':True,'data':serials.data},status=status.HTTP_200_OK)
     def post(self,request,format=None):
-        data_=request.data
-        obj = BotStop.objects.get(id=1)
-        obj.initial=data_.get('initial')
-        return Response({'status':True,'data':'data saved successfully'},status=status.HTTP_200_OK)
+        token = request.META.get('HTTP_AUTHORIZATION')
+        data=request.data
+        try:
+            d = jwt.decode(token, key=KEYS, algorithms=['HS256'])
+        except:
+            return Response({'status': False, 'message': 'Token Expired'},
+                            status=status.HTTP_401_UNAUTHORIZED)
+        serial=LogSerials(data=data)
+
+        if serial.is_valid():
+            serial.save()
+            obj=LogsModel.objects.all()
+            if len(obj)>=50:
+                obj=obj[0]
+                obj.delete()
+            return Response({'status':True,'message':'logs saved Successfully'},status=status.HTTP_200_OK)
+        else:
+            return Response({'status':False,'message':serial.errors},status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
+
+

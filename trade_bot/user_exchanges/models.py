@@ -1,5 +1,7 @@
 from django.db import models
 
+
+
 class Binance_model(models.Model):
     id=models.ForeignKey('core.User',on_delete=models.CASCADE,db_column='id')
     clientOrderId = models.CharField(max_length=200,primary_key=True)
@@ -16,7 +18,7 @@ class Binance_model(models.Model):
     workingTime = models.CharField(max_length=200,default='0')
 
     class Meta:
-        db_table = 'Binance_model'
+        db_table = 'binance_model'
 
 
 class Fills(models.Model):
@@ -28,7 +30,7 @@ class Fills(models.Model):
     tradeId = models.CharField(max_length=200)
 
     class Meta:
-        db_table = 'Fills'
+        db_table = 'fills'
 
 class Exception(models.Model):
     id = models.ForeignKey('core.user',on_delete=models.CASCADE,db_column='id')
@@ -42,7 +44,7 @@ class Exception(models.Model):
     Exchange_name = models.CharField(max_length=200)
     status=models.CharField(max_length=100,default=False)
     class Meta:
-        db_table='Exception'
+        db_table='exception'
 
 
 class Bitmex_model(models.Model):
@@ -63,7 +65,7 @@ class Bitmex_model(models.Model):
     transactTime = models.CharField(max_length=200)
     status=models.CharField(max_length=100,default=True)
     class Meta:
-        db_table = 'Bitmex_model'
+        db_table = 'bitmex_model'
 
 
 class Kucoin_model(models.Model):
@@ -78,7 +80,7 @@ class Kucoin_model(models.Model):
     status = models.CharField(max_length=200)
     clientOid = models.CharField(max_length=200)
     class Meta:
-        db_table = 'Kucoin_model'
+        db_table = 'kucoin_model'
 
 
 class Gate_model(models.Model):
@@ -93,7 +95,7 @@ class Gate_model(models.Model):
     orderId = models.CharField(max_length=200,primary_key=True)
     status=models.CharField(max_length=200,default=True)
     class Meta:
-        db_table = 'Gate_model'
+        db_table = 'gate_model'
 
 class Exchanges(models.Model):
     exchange_name=models.CharField(max_length=200,primary_key=True,db_column='exchange_name')
@@ -102,13 +104,13 @@ class Exchanges(models.Model):
     socket = models.CharField(max_length=300,default='dsgdfgsd')
     status = models.CharField(max_length=200,default='1')
     class Meta:
-        db_table='Exchanges'
+        db_table='exchanges'
 
 class PairTable(models.Model):
     pair=models.CharField(max_length=200)
     coin=models.CharField(max_length=200)
     class Meta:
-        db_table='Pair_Table'
+        db_table='pair_table'
 class BinanceKeys1(models.Model):
     sr =  models.AutoField(primary_key=True)
     id=models.ForeignKey('core.User', on_delete=models.CASCADE, db_column='id')
@@ -116,14 +118,14 @@ class BinanceKeys1(models.Model):
     secret_key=models.CharField(max_length=500)
 
     class Meta:
-        db_table='Binanace_keys1'
+        db_table='binanace_keys1'
 class BitmexKeys1(models.Model):
     sr =  models.AutoField(primary_key=True)
     id = models.ForeignKey('core.User', on_delete=models.CASCADE, db_column='id')
     api_key=models.CharField(max_length=500)
     secret_key=models.CharField(max_length=500)
     class meta:
-        db_table='Bitmex_keys1'
+        db_table='bitmex_keys1'
 class KucoinKeys1(models.Model):
     sr =  models.AutoField(primary_key=True)
     id = models.ForeignKey('core.User', on_delete=models.CASCADE, db_column='id')
@@ -131,18 +133,32 @@ class KucoinKeys1(models.Model):
     secret_key = models.CharField(max_length=500)
     passphrase=models.CharField(max_length=200)
     class Meta:
-        db_table='Kucoin_keys1'
+        db_table='kucoin_keys1'
 class GateIoKeys1(models.Model):
     sr =  models.AutoField(primary_key=True)
     id = models.ForeignKey('core.User', on_delete=models.CASCADE, db_column='id')
     api_key = models.CharField(max_length=500)
     secret_key = models.CharField(max_length=500)
     class Meta:
-        db_table='Gate_keys1'
+        db_table='gate_keys1'
+
 class BotStop(models.Model):
     initial=models.CharField(max_length=20,default='1')
     signal=models.CharField(max_length=20,default='0')
-    status=models.CharField(max_length=20,default='false')
+    status=models.CharField(max_length=20,default='0')
+
+class KillBot(models.Model):
+    shut_down = models.CharField(max_length=20, default='0')
+
+class LogsModel(models.Model):
+    sr = models.AutoField(primary_key=True)
+    id = models.ForeignKey('core.User', on_delete=models.CASCADE, db_column='id')
+    symbol=models.CharField(max_length=200)
+    price=models.CharField(max_length=200)
+    quantity=models.CharField(max_length=200)
+    side=models.CharField(max_length=200)
+    exchange=models.CharField(max_length=200)
+
 
 
 

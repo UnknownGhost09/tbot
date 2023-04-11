@@ -9,6 +9,10 @@ from gate_api import SpotApi, MarginApi, WalletApi, ApiClient, Order
 import requests
 
 import datetime
+import os
+from dotenv import load_dotenv
+from pathlib import Path
+
 # pip install -U websocket_client
 from websocket import WebSocketApp
 logging.basicConfig(level=logging.INFO)
@@ -17,6 +21,9 @@ logger = logging.getLogger(__name__)
 
 class TradeBot:
     def __init__(self,symbol,side,price,amount,token,id,api_key,secret_key,socket,**kwargs):
+        path = Path("./config.env")
+        load_dotenv(dotenv_path=path)
+        self.SITE_URL = os.getenv('SITE_URL')
         self.symbol=symbol.upper()
         self.side=side
         self.price=price
@@ -41,23 +48,14 @@ class TradeBot:
         global spot_api
         global ws
         symbol = self.symbol
-        print(symbol)
         side=self.side
-        print(side)
         price=self.price
-        print(price)
         amount = self.amount
-        print(amount)
         token = self.token
-        print(token)
         id = self.id
-        print(id)
         _api_key = self._api_key
-        print(_api_key)
         _secret_key = self._secret_key
-        print(_secret_key)
         socket= self.socket
-        print(socket)
 
         config = gate_api.Configuration(
             key=_api_key,
@@ -108,6 +106,9 @@ class GateWebSocketApp(WebSocketApp):
     def unsubscribe(self, channel, payload=None, auth_required=True):
         self._request(channel, "unsubscribe", payload, auth_required)
 def on_message(ws, message,*args):
+    path = Path("./config.env")
+    load_dotenv(dotenv_path=path)
+    SITE_URL = os.getenv('SITE_URL')
     # type: (TradeBot, str) -> None
     # handle whatever message you received
     print("message recived")
@@ -117,7 +118,7 @@ def on_message(ws, message,*args):
         order = Order(account='margin', currency_pair=symbol,price=price,
                       amount=amount, side=side)
         order =spot_api.create_order(order)
-        ws.close()
+
         order['id']=id
         exchanges = json.dumps(order)
         print(order)
@@ -125,12 +126,23 @@ def on_message(ws, message,*args):
         with open(r'tradedata.json', 'a') as fl:
             fl.write(",")
             fl.write(exchanges)
-        data = requests.post(url='http://192.168.18.110:8000/user_exchanges/gate', data=order,
+        order['flag']='True'
+        data = requests.post(url=SITE_URL+'/user_exchanges/gate', data=order,
+                             headers={'Authorization': token})
+
+
+
+        data = data.json()
+        print(data)
+        logs = {'id': id, 'symbol': symbol,
+                'price': price,
+                'quantity': amount, 'side': side, 'exchange': 'Gate'}
+        data = requests.post(url=SITE_URL + '/user_exchanges/logs', data=logs,
                              headers={'Authorization': token})
 
         data = data.json()
         print(data)
-
+        ws.close()
     except GateApiException as e:
         data = {'id': id, 'status': False, 'message': str(e), 'side': side, 'symbol': symbol,
                 'quantity': amount, 'time': str(datetime.datetime.now()), 'Exchange_name': 'Gateio'}
@@ -143,7 +155,7 @@ def on_message(ws, message,*args):
             fl.write(",")
             fl.write(exchanges)
 
-        data = requests.post(url='http://192.168.18.110:8000/user_exchanges/gate', data=data,
+        data = requests.post(url=SITE_URL+'/user_exchanges/gate', data=data,
                              headers={'Authorization': token})
         data = data.json()
         print(data)
@@ -153,13 +165,5 @@ def on_open(ws):
     print("connection oppended")
     logger.info('websocket  connected')
     ws.subscribe("spot.trades", [symbol], False)
-#token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImJveEBnbWFpbC5jb20iLCJ1c2VybmFtZSI6ImJveCIsImV4cCI6MTY4MDA4MjYwMX0.at2VCpus4HEQLQzhhl99GKoDf4HM5ivMYNQyznqG_GY'
-#api_key = '996fe20df5af3f7a53ce291b6e46a975'
-#secret_key = '41492892a8000de41686021ca2afd390f472731715da5020d29f0f5180ae8f53'
-
-#socket = 'wss://api.gateio.ws/ws/v4/'
-
-#obj=TradeBot("BTC_USDT","buy",23000,1,token,1,api_key,secret_key,socket)
-#obj.global_()
 
 
