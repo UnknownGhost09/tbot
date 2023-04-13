@@ -119,17 +119,33 @@ class Stb:
                     initial_ = requests.post(url=self.SITE_URL+'/user_exchanges/initial', data={'initial': '1'})
                     break
 
-            url = "https://api.binance.com/api/v1/ticker/price"
-            data = requests.get(url)
-            data = data.json()
-            a = [int(float(i.get("price"))) for i in data if self.symbol in i.get("symbol")]
-            a = float("".join(map(str, a)))
-            self.amount = round(self.amount/a,5)
+           
             obj = second.First(self.symbol)
             data = obj.coin()
             lst = [i[1] for i in data]
 
             if side is not None:
+                if side=='sell':
+                
+                    API_KEY = 'QSOAqPicgAdGuxFrUX3fRyliUKwZvMZz5W2vmozNIZrxUu4hUw5FIRkv1G2TO4F2'
+                    SECRET_KEY = 'vYvmMCee2XSKd5o4asykDoB8lR93XCSvAYYWRjA9Fk4tF0mOtEByijNEMX3TVyCl'
+
+                    client = Client(api_key=API_KEY, api_secret=SECRET_KEY, )
+
+                    balance = client.get_account()['balances']
+                    balance = [i for i in balance if i.get('asset') == 'BTC']
+                    self.amount=float(balance[0].get('free'))
+                elif side=='buy':
+                    url = "https://api.binance.com/api/v1/ticker/price"
+
+                    data = requests.get(url)
+
+                    data = data.json()
+
+                    a = [int(float(i.get("price"))) for i in data if self.symbol in i.get("symbol")]
+
+                    a = float("".join(map(str, a)))
+                    self.amount = round(float(self.amount) / float(a), 5)
                 if 'Binance' in lst:
                     t1 = threading.Thread(target=binance_trade,
                                           args=(self.symbol, side,
