@@ -60,7 +60,7 @@ CORS_ALLOW_HEADERS = [
 
 INSTALLED_APPS = [
 
-    'channels',
+    
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -106,9 +106,9 @@ TEMPLATES = [
         },
     },
 ]
-ASGI_APPLICATION = "trade_bot.asgi.application"
+#ASGI_APPLICATION = "trade_bot.asgi.application"
 
-#WSGI_APPLICATION = 'prj.wsgi.application'
+WSGI_APPLICATION = 'trade_bot.wsgi.application'
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': "channels.layers.InMemoryChannelLayer"
