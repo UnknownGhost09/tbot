@@ -146,18 +146,20 @@ class BotStop(models.Model):
     initial=models.CharField(max_length=20,default='1')
     signal=models.CharField(max_length=20,default='0')
     status=models.CharField(max_length=20,default='0')
+    class Meta:
+        db_table='botstop'
 
 class KillBot(models.Model):
     shut_down = models.CharField(max_length=20, default='0')
+    class Meta:
+        db_table='killbot'
 
 class LogsModel(models.Model):
     sr = models.AutoField(primary_key=True)
     id = models.ForeignKey('core.User', on_delete=models.CASCADE, db_column='id')
-    symbol=models.CharField(max_length=200)
-    price=models.CharField(max_length=200)
-    quantity=models.CharField(max_length=200)
-    side=models.CharField(max_length=200)
-    exchange=models.CharField(max_length=200)
+    order=models.CharField(max_length=1000,default='null')
+    class Meta:
+        db_table='logsmodel'
 
 
 
