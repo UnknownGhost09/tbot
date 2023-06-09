@@ -8,7 +8,8 @@ from .serializer import BinanceSerial,BitmexSerial,GateSerial,\
     KucoinSerial,ExceptionSerial,Fillserial,ExchangesSeial,PairSerial,\
     BinanceKeysSerial,BitmexKeysSerial,GatekeySerial,KucoinKeysSerial,BotStopSerial,LogSerials
 from scheduler_ import Stb
-
+from .status import Main
+import threading
 import jwt
 from django.conf import settings
 from rest_framework import status
@@ -22,7 +23,7 @@ from kucoin.client import Client
 from kucoin.exceptions import KucoinAPIException
 import gate_api
 from gate_api.exceptions import ApiException, GateApiException
-from gate_api import SpotApi, MarginApi, WalletApi, ApiClient, Order
+from gate_api import SpotApi, MarginApi, WalletApi, ApiClient
 
 
 
@@ -414,6 +415,13 @@ class Bot_api(APIView):
 
         print(id, symbol, token, amount, binapi_key, binsecret_key, bitapi_key, bitsecret_key, gateapi_key,
               gatesecret_key, kucapi_key, kucsecret_key, kucpassphrase)
+        t1 = threading.Thread(target=Main)
+
+        # t2=threading.Thread(target=Stb,args=(symbol, amount, token, id, binapi_key, binsecret_key, bitapi_key, bitsecret_key, gateapi_key,
+        #     gatesecret_key, kucapi_key, kucsecret_key, kucpassphrase, bin_socket, bit_socket, gate_socket,
+        #     kuk_socket))
+        t1.start()
+        # t2.start()
         Stb(symbol, amount, token, id, binapi_key, binsecret_key, bitapi_key, bitsecret_key, gateapi_key,
             gatesecret_key, kucapi_key, kucsecret_key, kucpassphrase, bin_socket, bit_socket, gate_socket,
             kuk_socket)
@@ -885,12 +893,14 @@ class StopStatus(APIView):
         obj=obj[0]
         obj2=obj2[0]
         signal=obj.signal
+        running_status=obj.status
         shut_down=obj2.shut_down
-        return Response({'status':True,'shut_down':shut_down,'signal':signal},status=status.HTTP_200_OK)
+        return Response({'status':True,'shut_down':shut_down,'signal':signal,'running_status':running_status},status=status.HTTP_200_OK)
     def post(self,request,format=None):
         obj = BotStop.objects.all()
         obj=obj[0]
         obj.signal='0'
+        obj.status='0'
         obj.save()
         return Response({'status':True,'message':'saved'},status=status.HTTP_200_OK)
     def put(self,request,format=None):
