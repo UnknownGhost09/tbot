@@ -16,6 +16,7 @@ from pathlib import Path
 from collections import deque
 import talib
 
+
 running = True
 td = True
 
@@ -26,8 +27,8 @@ killorder=0
 #     return bot
 
 
-def binance_trade(side,amount,symbol):
-    bot = bin.TradeBot(side,amount,symbol)
+def binance_trade(side,amount,symbol,binapikey,binsecretkey,id,token):
+    bot = bin.TradeBot(side,amount,symbol,binapikey,binsecretkey,id,token)
     return bot
 
 def kucoin_trade(symbol, side, amount, token, id, kucapi_key, kucsecret_key, passphrase, kuk_socket):
@@ -180,8 +181,8 @@ class Stb:
             self.gate_socket=gate_socket
             self.kuc_socket=kuk_socket
             self.socket="wss://stream.binance.com:9443/ws/" + self.symbol.lower() + "@kline_1m"
-            self.client = Client('ACebgoy9pnpy0CzbI4xGdeUcVXUaRoO5u5PLKYnz1dp8f4bWlNhS1uhqzxx0Nc1f',
-                                 'VbeLJgHSMC8LVUNwFHRvff8UyFwMmjp90NWNXobKHrEfY2dcSxyY7cRDR0Po89g9')
+            self.client = Client(self.binapi_key,
+                                 self.binsecret_key)
             signal = requests.put(url=self.SITE_URL + '/user_exchanges/stopstatus')
             while td:
                 signal = requests.get(url=self.SITE_URL + '/user_exchanges/stopstatus')
@@ -203,8 +204,11 @@ class Stb:
         try:
             signal = requests.get(url=self.SITE_URL + '/user_exchanges/stopstatus')
             signal = signal.json()
-            print(signal)
-            print(signal.get('message'))
+            bot_status=json.dumps({'status':signal.get('running_status')})
+
+
+
+
             if signal.get('shut_down') == '1':
                 td = False
                 self.ws.close()
@@ -270,10 +274,9 @@ class Stb:
                 self.ws.close()
                 if side=='sell':
                 
-                    API_KEY = 'ACebgoy9pnpy0CzbI4xGdeUcVXUaRoO5u5PLKYnz1dp8f4bWlNhS1uhqzxx0Nc1f'
-                    SECRET_KEY = 'VbeLJgHSMC8LVUNwFHRvff8UyFwMmjp90NWNXobKHrEfY2dcSxyY7cRDR0Po89g9'
+                    
 
-                    client = Client(api_key=API_KEY, api_secret=SECRET_KEY, )
+                    client = Client(api_key=self.binapi_key, api_secret=self.binsecret_key, )
 
                     balance = client.get_account()['balances']
                     balance = [i for i in balance if i.get('asset') == 'BTC']
@@ -290,7 +293,7 @@ class Stb:
                     a = float("".join(map(str, a)))
                     price = round(float(self.amount) / float(a), 5)
                 if 'Binance' in lst:
-                    t1 = threading.Thread(target=binance_trade,args=(side,price,self.symbol,))
+                    t1 = threading.Thread(target=binance_trade,args=(side,price,self.symbol,self.binapi_key,self.binsecret_key,self.id,self.token))
                     t1.start()
 
                 '''if 'Kucoin' in lst:
